@@ -360,20 +360,20 @@ class Board:
 
 		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
 
-		if move in LegalMoves:
-			move.piece.SetBoardPos(move.target_square) # Move the pieces board coords
-			self.SetPieceAtBoardPos(move.target_square, move.piece) # Move the piece to the target square
-			self.SetPieceAtBoardPos(move.start_square, '_') # Make the start square blank
-
-			ChangePlayColor(self)
-
-			return 
+		if move in LegalMoves: # If the move is a legal move, actually play it on the board
+			self.PlayMove(self, move=move) # <--- This function handles all of the internals
 		
 		else:
-			return "No Legal Moves"
+			return "No Legal Moves" # If the move is not legal, return saying it is not legal. You can't return None because the upper
+									# section also is returning None currently.
 	
-	def PlayMove(self, move: Move):
-		pass
+	def PlayMove(self, move: Move): # This function is the same as the Move function, just no checking if the move is legal.
+		move.piece.SetBoardPos(move.target_square) # Move the pieces board coords
+		self.SetPieceAtBoardPos(move.target_square, move.piece) # Move the piece to the target square
+		self.SetPieceAtBoardPos(move.start_square, '_') # Make the start square blank
+
+		ChangePlayColor(self)
+
 
 	def GetPieces(self, color: str) -> list[Piece]:
 		pieces = []
@@ -399,7 +399,7 @@ class Board:
 		return None
 
 
-def GenerateLegalMoves(board: Board, piece: Piece) -> list[Move]:
+def GenerateLegalMoves(board: Board, piece: Piece) -> list[Move]: # This turns the psuedo legal moves into fully legal moves
 	pseudoLegalMoves = piece.GetLegalMoves(board)
 
 	fullLegalMoves = []
@@ -410,7 +410,9 @@ def GenerateLegalMoves(board: Board, piece: Piece) -> list[Move]:
 	for move in pseudoLegalMoves:
 		newBoard = copy.deepcopy(board)
 
-		newBoard.PlayMove(move)
+		newBoard.PlayMove(move) # This play move function does not need to check the legal moves 
+								# because it will be checked outside of the function. 
+								# Just update everything like usual assuming everything is correct.
 
 		if KingChecked(newBoard, move.piece.color):
 			del newBoard
