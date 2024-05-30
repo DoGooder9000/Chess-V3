@@ -13,7 +13,7 @@ class Piece:
         self.SetRect()
         
     def SetRect(self):
-        self.rect = pygame.Rect((board_pos[0]*square_width, board_pos[1]*square_height), square_size)
+        self.rect = pygame.Rect((self.board_pos[0]*square_width, self.board_pos[1]*square_height), square_size)
     
     def Draw(self):
         img = None
@@ -128,12 +128,18 @@ class Board:
         self.size = (width, height)
         
         self.board = []
+
+        self.Reset()
     
     def Reset(self):
-        GenerateNewBoard()
+        self.GenerateNewBoard()
     
     def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'):
         self.board = []
+
+        for _ in range(self.width * self.height):
+            self.board.append(0)
+
         i = 0 # Index in the board we are at
         
         for symbol in FEN:
@@ -216,7 +222,7 @@ def DrawPieces():
 def Update():
     pygame.display.update()
 
-window_size = (300, 300)
+window_size = (800, 800)
 window_width, window_height = window_size
 window_name = "Chess V3"
 
@@ -255,7 +261,7 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 
 
-Board = Board(8, 8)
+Board = Board(board_width, board_height)
 
 while True:
     for event in pygame.event.get():
