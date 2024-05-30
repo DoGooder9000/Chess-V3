@@ -1,6 +1,22 @@
 import pygame
+import copy
 
 pygame.init()
+
+
+class Piece:
+    def __init__(self):
+        pass
+
+
+class Move:
+    def __init__(self, start_square: tuple[int], target_square: tuple[int]):
+        self.start_square = start_square
+        self.target_square = target_square
+
+
+
+
 
 
 window_size = (600, 600)
