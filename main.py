@@ -1,5 +1,6 @@
 import pygame
 import copy
+import random
 
 pygame.init()
 
@@ -226,8 +227,53 @@ class King(Piece):
 		
 		super().__init__(FEN, color, board_pos)
 	
+	def GetLegalMoves(self, board: Board) -> list[Move]:
+		LegalMoves = []
+
+		directions = []
+		
+		X, Y = self.board_pos
+		index = BoardPosToIndex(self.board_pos)
+
+		if X >= 1:
+			directions.append(-1)
+		if X <= board_width-2:
+			directions.append(+1)
+		if Y >= 1:
+			directions.append(-8)
+		if Y <= board_height-2:
+			directions.append(+8)
+
+		if X >= 1 and Y >= 1:
+			directions.append(-9)
+		if X >= 1 and Y <= board_height-2:
+			directions.append(+7)
+		if X <= board_width-2 and Y >= 1:
+			directions.append(-7)
+		if X <= board_width-2 and Y <= board_height-2:
+			directions.append(+9)
+
+		for direction in directions:
+			piece = board.board[index+direction]
+			
+			if piece == '_':
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+direction), self))
+			
+			elif piece.color != self.color:
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+direction), self))
+			
+			else:
+				continue
+
+		return LegalMoves
+
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
-		return []
+		attacked = []
+
+		for move in self.GetLegalMoves(board):
+			attacked.append(move.target_square)
+
+		return attacked
 
 class Pawn(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -254,7 +300,7 @@ class Pawn(Piece):
 			#	If not moved yet		And 2 spaces above is clear			And 1 space above is clear
 			if self.moved == False and board.board[index-16] == '_' and board.board[index-8] == '_':
 				# Make sure to set the double pawn push move argument
-				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-16), self, False, True))
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-16), self, isEnPassant=False, isDoublePawnPush = True))
 			
 			# Single Pawn Push
 			if board.board[index-8] == '_':
@@ -270,6 +316,16 @@ class Pawn(Piece):
 			# Left Capture
 			if board.board[index-9] != '_' and board.board[index-9].color != self.color and X >= 1:
 				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
+
+
+			# En Passant
+			if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'Black' and board.board[index-7] == '_': # Right En Passant. Make sure the square above the pawn to be captured is free
+				if board.board[index+1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top right
+			
+			if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'Black' and board.board[index-9] == '_': # Left En Passant. Make sure the square above the pawn to be captured is free
+				if board.board[index-1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
 		
 		else:
 			# Double Pawn Push
@@ -277,7 +333,7 @@ class Pawn(Piece):
 			#	If not moved yet		And 2 spaces below is clear			And 1 space below is clear
 			if self.moved == False and board.board[index+16] == '_' and board.board[index+8] == '_':
 				# Make sure to set the double pawn push move argument
-				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+16), self, False, True))
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+16), self, isEnPassant=False, isDoublePawnPush = True))
 			
 			# Single Pawn Push
 			if board.board[index+8] == '_':
@@ -294,6 +350,16 @@ class Pawn(Piece):
 			# Left Capture
 			if board.board[index+7] != '_' and board.board[index+7].color != self.color and X >= 1:
 				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self))
+			
+			# En Passant
+
+			if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'White' and board.board[index+9] == '_': # Right En Passant. Make sure the square below the pawn to be captured is free
+				if board.board[index+1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the Bottom Right
+			
+			if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'White' and board.board[index+7] == '_': # Left En Passant. Make sure the square below the pawn to be captured is free
+				if board.board[index-1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
 
 		return LegalMoves
 	
@@ -329,7 +395,7 @@ class Move:
 		self.isDoublePawnPush = isDoublePawnPush
 	
 	def __repr__(self) -> str:
-		return f" {self.start_square} to {self.target_square} with {self.piece}"
+		return f" {self.start_square} to {self.target_square} with {self.piece}, {self.isEnPassant} {self.isDoublePawnPush}"
 	
 	def __eq__(self, other: object) -> bool:
 		return (self.target_square == other.target_square) and (self.start_square == other.start_square) and (self.piece == other.piece) and (self.isEnPassant == other.isEnPassant)
@@ -443,6 +509,7 @@ class Board:
 		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
 
 		if move in LegalMoves: # If the move is a legal move, actually play it on the board
+
 			self.PlayMove(move) # <--- This function handles all of the internals
 		
 		else:
@@ -454,6 +521,19 @@ class Board:
 		
 		if move.isDoublePawnPush:
 			self.DoublePawnMoves.append(move.piece)
+
+		if move.isEnPassant:
+			if move.piece.color == 'White': # If the pawn is white
+				if move.target_square[0] > move.start_square[0]:
+					self.SetPieceAtBoardPos((move.start_square[0]+1, move.start_square[1]), '_')
+				else:
+					self.SetPieceAtBoardPos((move.start_square[0]-1, move.start_square[1]), '_')
+				
+			else: # If the pawn is black
+				if move.target_square[0] > move.start_square[0]:
+					self.SetPieceAtBoardPos((move.start_square[0]+1, move.start_square[1]), '_')
+				else:
+					self.SetPieceAtBoardPos((move.start_square[0]-1, move.start_square[1]), '_')
 		
 		if type(move.piece) == Pawn:
 			move.piece.moved = True
@@ -500,24 +580,38 @@ def GenerateLegalMoves(board: Board, piece: Piece) -> list[Move]: # This turns t
 
 	for move in pseudoLegalMoves:
 		newBoard = copy.deepcopy(board)
+		newPiece = copy.deepcopy(piece)
+
+		newBoard.SetPieceAtBoardPos(newPiece.board_pos, newPiece)
 
 		# We need to remake the move to reference the proper (relative) piece in the newBoard
 
-		newMove = Move(move.start_square, move.target_square, newBoard.board[BoardPosToIndex(move.start_square)],
+		newMove = Move(move.start_square, move.target_square, newPiece,
 				 isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush)
 
 		newBoard.PlayMove(newMove) # This play move function does not need to check the legal moves 
 								# because it will be checked outside of the function. 
 								# Just update everything like usual assuming everything is correct.
 
-		if KingChecked(newBoard, move.piece.color):
-			del newBoard, newMove
+		if KingChecked(newBoard, newPiece.color):
+			del newBoard, newMove, newPiece
 			continue
 		else:
 			fullLegalMoves.append(move)
-			del newBoard, newMove
+			del newBoard, newMove, newPiece
 	
 	return fullLegalMoves
+
+def GenerateAllLegalMoves(board: Board, color: str) -> list[Piece]:
+	pieces = board.GetPieces(color)
+
+	LegalMoves = []
+
+	for piece in pieces:
+		for move in GenerateLegalMoves(board, piece):
+			LegalMoves.append(move)
+	
+	return LegalMoves
 
 
 def GetSlidingPieceLegalMoves(board: Board, piece: Piece) -> list[Move]:
@@ -584,18 +678,22 @@ def GetNumberOfSquaresToEdge(start_square: tuple[int], dir: str): # 8 Different 
 
 def KingChecked(board: Board, color: str): # Returns whether or not the king of the color given is in check
 
+	attacked = GetAttackedSquares(board, color)
+
+
+	if board.GetPiece(King, color).board_pos in attacked:
+		return True
+	else:
+		return False
+
+def GetAttackedSquares(board: Board, color: str):
 	all_attacked_squares = []
 
 	for piece in board.GetPieces(OppositeColor(color)): # Loop through all enemy pieces
 		for square in piece.GetAttackedSquares(board):
 			all_attacked_squares.append(square) # Add the squares that are attacked to the list
-
-
-	if board.GetPiece(King, color).board_pos in all_attacked_squares:
-		return True
-	else:
-		return False
-
+	
+	return all_attacked_squares
 
 def OppositeColor(color: str):
 	if color == 'White': return 'Black'
@@ -702,6 +800,14 @@ clickedPiece: Piece = None
 mouseDown = False
 
 while True:
+	if currentBoard.color == 'Black':
+		try:
+			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
+		except:
+			print("\n\nYou won by Checkmate !!!!!\n\n")
+			pygame.quit()
+			quit()
+
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
@@ -717,7 +823,7 @@ while True:
 			if clickedPiece == '_':
 				clickedPiece = None
 			
-			elif clickedPiece.color != currentBoard.color:
+			elif clickedPiece.color != 'White':
 				clickedPiece = None
 
 		elif event.type == pygame.MOUSEBUTTONUP:
@@ -728,7 +834,14 @@ while True:
 				start_square = GetBoardPosFromPiece(clickedPiece, currentBoard)
 
 				if target_square != start_square:
-					result = currentBoard.BoardMove(Move(start_square, target_square, clickedPiece))
+					for move in clickedPiece.GetLegalMoves(currentBoard):
+						if move.target_square == target_square:
+							m = move
+							break
+						else:
+							m = Move(start_square, target_square, clickedPiece)
+
+					result = currentBoard.BoardMove(m)
 
 					if result == "No Legal Moves":
 						clickedPiece.SetBoardPos(start_square)
@@ -741,6 +854,10 @@ while True:
 		elif event.type == pygame.MOUSEMOTION:
 			if mouseDown and clickedPiece != None:
 				clickedPiece.rect.center = pygame.mouse.get_pos()
+			
+		elif event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_r:
+				currentBoard.Reset()
 	
 	window.fill('black')
 	
