@@ -293,8 +293,8 @@ class Pawn(Piece):
 
 		X, Y = self.board_pos
 		index = BoardPosToIndex(self.board_pos)
-		
-		if Y == 0 or Y == 7:
+
+		if Y <= 0 or Y >= 7:
 			pass
 		else:
 
@@ -314,11 +314,11 @@ class Pawn(Piece):
 				# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
 
 				# Right Capture
-				if board.board[index-7] != '_' and board.board[index-7].color != self.color and X <= board_width-2:
+				if X <= board_width-2 and board.board[index-7] != '_' and board.board[index-7].color != self.color:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self))
 				
 				# Left Capture
-				if board.board[index-9] != '_' and board.board[index-9].color != self.color and X >= 1:
+				if X >= 1 and board.board[index-9] != '_' and board.board[index-9].color != self.color:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
 
 
@@ -348,11 +348,11 @@ class Pawn(Piece):
 				# For Black, Bottom Right is +9 and Bottom Left is +7
 
 				# Right Capture
-				if board.board[index+9] != '_' and board.board[index+9].color != self.color and X <= board_width-2:
+				if X <= board_width-2 and board.board[index+9] != '_' and board.board[index+9].color != self.color:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self))
 				
 				# Left Capture
-				if board.board[index+7] != '_' and board.board[index+7].color != self.color and X >= 1:
+				if X >= 1 and board.board[index+7] != '_' and board.board[index+7].color != self.color:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self))
 				
 				# En Passant
@@ -365,7 +365,7 @@ class Pawn(Piece):
 					if board.board[index-1] in board.DoublePawnMoves:
 						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
 
-			return LegalMoves
+		return LegalMoves
 	
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
 		attacking = []
@@ -385,7 +385,7 @@ class Pawn(Piece):
 				attacking.append(IndexToBoardPos(index+9))
 			
 			if X >= 1:
-				attacking.append(IndexToBoardPos(index-7))
+				attacking.append(IndexToBoardPos(index+7))
 
 		return attacking
 
@@ -568,6 +568,7 @@ class Board:
 		return None
 	
 	def GetPiece(self, piecetype: Piece, color: str) -> Piece | None:
+
 		for piece in self.board:
 			if piece != '_' and type(piece) == piecetype and piece.color == color:
 				return piece
@@ -803,31 +804,54 @@ currentBoard = Board(board_width, board_height, 'White')
 clickedPiece: Piece = None
 
 mouseDown = False
+skipErrors = True
+
+clock = pygame.time.Clock()
 
 while True:
+
 	if currentBoard.color == 'Black':
-		#try:
-		currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
-		#except:
-		if KingChecked(currentBoard, 'Black'):
-			#print("\n\nWhite won by Checkmate !!!!!\n\n")
-			pygame.quit()
-			quit()
+		if skipErrors:
+			try:
+				#currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
+				currentBoard.BoardMove(GenerateAllLegalMoves(currentBoard, 'Black')[0])
+			
+			except:
+				if KingChecked(currentBoard, 'Black'):
+					print("White Wins by Checkmate")
+				else:
+					print("Draw by Stalemate. Black has no moves")
 		else:
-			#print('Draw Black No moves')
-			pass
+			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
 
 	if currentBoard.color == 'White':
-		#try:
-		currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
-		#except:
-		if KingChecked(currentBoard, 'White'):
-			#print("\n\nBlack won by Checkmate !!!!!\n\n")
-			pygame.quit()
-			quit()
+		if skipErrors:
+			try:
+				currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
+			
+			except:
+				if KingChecked(currentBoard, 'White'):
+					print("Black Wins by Checkmate")
+				else:
+					print("Draw by Stalemate. White has no moves")
 		else:
-			pass
-			#print('Draw White No moves')
+			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
+	
+	
+	if len(currentBoard.GetPieces('White')) == 1 and len(currentBoard.GetPieces('Black')) == 1:
+		print('Draw by no material')
+
+	'''	if currentBoard.color == 'White':
+		try:
+			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
+		except:
+			if KingChecked(currentBoard, 'White'):
+				#print("\n\nBlack won by Checkmate !!!!!\n\n")
+				pygame.quit()
+				quit()
+			else:
+				pass
+			#print('Draw White No moves')'''
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -847,7 +871,6 @@ while True:
 			elif clickedPiece.color != 'White':
 				clickedPiece = None
 
-			clickedPiece = None
 		elif event.type == pygame.MOUSEBUTTONUP:
 			mouseDown = False
 
@@ -880,6 +903,8 @@ while True:
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_r:
 				currentBoard.Reset()
+			elif event.key == pygame.K_a:
+				skipErrors = not skipErrors
 	
 	window.fill('black')
 	
