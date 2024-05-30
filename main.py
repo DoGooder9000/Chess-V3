@@ -5,222 +5,225 @@ pygame.init()
 
 
 class Piece:
-    def __init__(self, FEN: str, color: str, board_pos: tuple[int]):
-        self.FEN = FEN
-        self.color = color
-        self.board_pos = board_pos
-        
-        self.SetRect()
-        
-    def SetRect(self):
-        self.rect = pygame.Rect((self.board_pos[0]*square_width, self.board_pos[1]*square_height), square_size)
-    
-    def Draw(self):
-        img = None
-        
-        match self.FEN:
-            
-            case 'p':
-                img = BlackPawn
-                
-            case 'r':
-                img = BlackRook
-                
-            case 'n':
-                img = BlackKnight
-                
-            case 'b':
-                img = BlackBishop
-                
-            case 'q':
-                img = BlackQueen
-                
-            case 'k':
-                img = BlackKing
+	def __init__(self, FEN: str, color: str, board_pos: tuple[int]):
+		self.FEN = FEN
+		self.color = color
+		self.board_pos = board_pos
+		
+		self.SetRect()
+		
+	def SetRect(self):
+		self.rect = pygame.Rect((self.board_pos[0]*square_width, self.board_pos[1]*square_height), square_size)
+	
+	def Draw(self):
+		img = None
+		
+		match self.FEN:
+			
+			case 'p':
+				img = BlackPawn
+				
+			case 'r':
+				img = BlackRook
+				
+			case 'n':
+				img = BlackKnight
+				
+			case 'b':
+				img = BlackBishop
+				
+			case 'q':
+				img = BlackQueen
+				
+			case 'k':
+				img = BlackKing
 
-            case 'P':
-                img = WhitePawn
-            
-            case 'R':
-                img = WhiteRook
-                
-            case 'N':
-                img = WhiteKnight
-                
-            case 'B':
-                img = WhiteBishop
-                
-            case 'Q':
-                img = WhiteQueen
-            
-            case 'K':
-                img = WhiteKing
-                
-        window.blit(img, self.rect.topleft)
+			case 'P':
+				img = WhitePawn
+			
+			case 'R':
+				img = WhiteRook
+				
+			case 'N':
+				img = WhiteKnight
+				
+			case 'B':
+				img = WhiteBishop
+				
+			case 'Q':
+				img = WhiteQueen
+			
+			case 'K':
+				img = WhiteKing
+				
+		window.blit(img, self.rect.topleft)
 
 
 class Rook(Piece):
-    def __init__(self, color: str, board_pos: tuple[int]):
-        if color == 'White':
-            FEN = 'R'
-        else:
-            FEN = 'r'
-        
-        super().__init__(FEN, color, board_pos)
+	def __init__(self, color: str, board_pos: tuple[int]):
+		if color == 'White':
+			FEN = 'R'
+		else:
+			FEN = 'r'
+		
+		super().__init__(FEN, color, board_pos)
 
 class Bishop(Piece):
-    def __init__(self, color: str, board_pos: tuple[int]):
-        if color == 'White':
-            FEN = 'B'
-        else:
-            FEN = 'b'
-        
-        super().__init__(FEN, color, board_pos)
+	def __init__(self, color: str, board_pos: tuple[int]):
+		if color == 'White':
+			FEN = 'B'
+		else:
+			FEN = 'b'
+		
+		super().__init__(FEN, color, board_pos)
 
 class Knight(Piece):
-    def __init__(self, color: str, board_pos: tuple[int]):
-        if color == 'White':
-            FEN = 'N'
-        else:
-            FEN = 'n'
-        
-        super().__init__(FEN, color, board_pos)
+	def __init__(self, color: str, board_pos: tuple[int]):
+		if color == 'White':
+			FEN = 'N'
+		else:
+			FEN = 'n'
+		
+		super().__init__(FEN, color, board_pos)
 
 class Queen(Piece):
-    def __init__(self, color: str, board_pos: tuple[int]):
-        if color == 'White':
-            FEN = 'Q'
-        else:
-            FEN = 'q'
-        
-        super().__init__(FEN, color, board_pos)
+	def __init__(self, color: str, board_pos: tuple[int]):
+		if color == 'White':
+			FEN = 'Q'
+		else:
+			FEN = 'q'
+		
+		super().__init__(FEN, color, board_pos)
 
 class King(Piece):
-    def __init__(self, color: str, board_pos: tuple[int]):
-        if color == 'White':
-            FEN = 'K'
-        else:
-            FEN = 'k'
-        
-        super().__init__(FEN, color, board_pos)
+	def __init__(self, color: str, board_pos: tuple[int]):
+		if color == 'White':
+			FEN = 'K'
+		else:
+			FEN = 'k'
+		
+		super().__init__(FEN, color, board_pos)
 
 class Pawn(Piece):
-    def __init__(self, color: str, board_pos: tuple[int]):
-        if color == 'White':
-            FEN = 'P'
-        else:
-            FEN = 'p'
-        
-        super().__init__(FEN, color, board_pos)
+	def __init__(self, color: str, board_pos: tuple[int]):
+		if color == 'White':
+			FEN = 'P'
+		else:
+			FEN = 'p'
+		
+		super().__init__(FEN, color, board_pos)
 
 
 class Move:
-    def __init__(self, start_square: tuple[int], target_square: tuple[int]):
-        self.start_square = start_square
-        self.target_square = target_square
+	def __init__(self, start_square: tuple[int], target_square: tuple[int]):
+		self.start_square = start_square
+		self.target_square = target_square
 
 
 class Board:
-    def __init__(self, width: int, height: int):
-        self.width = width
-        self.height = height
-        
-        self.size = (width, height)
-        
-        self.board = []
+	def __init__(self, width: int, height: int):
+		self.width = width
+		self.height = height
+		
+		self.size = (width, height)
+		
+		self.board = []
 
-        self.Reset()
-    
-    def Reset(self):
-        self.GenerateNewBoard()
-    
-    def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'):
-        self.board = []
+		self.Reset()
+	
+	def Reset(self):
+		self.GenerateNewBoard()
+	
+	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'):
+		self.board = []
 
-        for _ in range(self.width * self.height):
-            self.board.append(0)
+		for _ in range(self.width * self.height):
+			self.board.append(0)
 
-        i = 0 # Index in the board we are at
-        
-        for symbol in FEN:
-            match symbol:
-                case 'R':
-                    self.board[i] = Rook('White', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'r':
-                    self.board[i] = Rook('Black', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'N':
-                    self.board[i] = Knight('White', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'n':
-                    self.board[i] = Knight('Black', IndexToBoardPos(i))
-                    i += 1
-                
-                case 'B':
-                    self.board[i] = Bishop('White', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'b':
-                    self.board[i] = Bishop('Black', IndexToBoardPos(i))
-                    i += 1
-                
-                case 'Q':
-                    self.board[i] = Queen('White', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'q':
-                    self.board[i] = Queen('Black', IndexToBoardPos(i))
-                    i += 1
-                
-                case 'K':
-                    self.board[i] = King('White', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'k':
-                    self.board[i] = King('Black', IndexToBoardPos(i))
-                    i += 1
-                
-                case 'P':
-                    self.board[i] = Pawn('White', IndexToBoardPos(i))
-                    i += 1
-                    
-                case 'p':
-                    self.board[i] = Pawn('Black', IndexToBoardPos(i))
-                    i += 1
-                
-                case '/':
-                    continue
-                
-                case _:
-                    if symbol in '12345678':
-                        for j in range(int(symbol)):
-                            self.board[i] = '_'
-                            i += 1
-        
-    
-    def Draw(self):
-        for x in range(board_width):
-            for y in range(board_height):
-                if (x+y)%2 == 0:
-                    pygame.draw.rect(window, LightSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
-                else:
-                    pygame.draw.rect(window, DarkSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
+		i = 0 # Index in the board we are at
+		
+		for symbol in FEN:
+			match symbol:
+				case 'R':
+					self.board[i] = Rook('White', IndexToBoardPos(i))
+					i += 1
+					
+				case 'r':
+					self.board[i] = Rook('Black', IndexToBoardPos(i))
+					i += 1
+					
+				case 'N':
+					self.board[i] = Knight('White', IndexToBoardPos(i))
+					i += 1
+					
+				case 'n':
+					self.board[i] = Knight('Black', IndexToBoardPos(i))
+					i += 1
+				
+				case 'B':
+					self.board[i] = Bishop('White', IndexToBoardPos(i))
+					i += 1
+					
+				case 'b':
+					self.board[i] = Bishop('Black', IndexToBoardPos(i))
+					i += 1
+				
+				case 'Q':
+					self.board[i] = Queen('White', IndexToBoardPos(i))
+					i += 1
+					
+				case 'q':
+					self.board[i] = Queen('Black', IndexToBoardPos(i))
+					i += 1
+				
+				case 'K':
+					self.board[i] = King('White', IndexToBoardPos(i))
+					i += 1
+					
+				case 'k':
+					self.board[i] = King('Black', IndexToBoardPos(i))
+					i += 1
+				
+				case 'P':
+					self.board[i] = Pawn('White', IndexToBoardPos(i))
+					i += 1
+					
+				case 'p':
+					self.board[i] = Pawn('Black', IndexToBoardPos(i))
+					i += 1
+				
+				case '/':
+					continue
+				
+				case _:
+					if symbol in '12345678':
+						for j in range(int(symbol)):
+							self.board[i] = '_'
+							i += 1
+		
+	
+	def Draw(self):
+		for x in range(board_width):
+			for y in range(board_height):
+				if (x+y)%2 == 0:
+					pygame.draw.rect(window, LightSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
+				else:
+					pygame.draw.rect(window, DarkSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
 
+
+def BoardPosToIndex(pos: tuple):
+	return pos[0] + pos[1] * board_width
 
 def IndexToBoardPos(index: int) -> tuple[int]:
-    return (index%board_width, index//board_width)
+	return (index%board_width, index//board_width)
 
 def DrawPieces():
-    for piece in Board.board:
-        if piece != '_':
-            piece.Draw()
+	for piece in Board.board:
+		if piece != '_':
+			piece.Draw()
 
 def Update():
-    pygame.display.update()
+	pygame.display.update()
 
 window_size = (800, 800)
 window_width, window_height = window_size
@@ -236,7 +239,7 @@ board_width, board_height = board_size
 square_width = window_width/board_width
 square_height = window_height/board_height
 square_size = (square_width, square_height)
-                                     
+									 
 LightSquareColor = (209, 162, 96)
 DarkSquareColor = (115, 90, 56)
 
@@ -264,16 +267,16 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 Board = Board(board_width, board_height)
 
 while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            quit()
-    
-    window.fill('black')
-    
-    Board.Draw()
-    
-    DrawPieces()
-    
-    Update()
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			pygame.quit()
+			quit()
+	
+	window.fill('black')
+	
+	Board.Draw()
+	
+	DrawPieces()
+	
+	Update()
 
