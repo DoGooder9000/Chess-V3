@@ -245,6 +245,32 @@ class Pawn(Piece):
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		LegalMoves = []
 
+		X, Y = self.board_pos
+		index = BoardPosToIndex(self.board_pos)
+
+		if self.color == 'White': # For white pawns
+			# Double Pawn Push
+
+			#	If not moved yet		And 2 spaces above is clear			And 1 space above is clear
+			if self.moved == False and board.board[index-16] == '_' and board.board[index-8] == '_':
+				# Make sure to set the double pawn push move argument
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-16), self, False, True))
+			
+			# Single Pawn Push
+			if board.board[index-8] == '_':
+				# This is only a single pawn push so no double pawn push argument
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self))
+			
+			# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
+
+			# Right Capture
+			if board.board[index-7] != '_' and board.board[index-7].color != self.color and X <= board_width-2:
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self))
+			
+			# Left Capture
+			if board.board[index-9] != '_' and board.board[index-9].color != self.color and X >= 1:
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
+
 		return LegalMoves
 	
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
@@ -271,11 +297,12 @@ class Pawn(Piece):
 
 
 class Move:
-	def __init__(self, start_square: tuple[int], target_square: tuple[int], pieceMoving: Piece, isEnPassant = False) -> None:
+	def __init__(self, start_square: tuple[int], target_square: tuple[int], pieceMoving: Piece, isEnPassant = False, isDoublePawnPush = False) -> None:
 		self.start_square = start_square
 		self.target_square = target_square
 		self.piece = pieceMoving
 		self.isEnPassant = isEnPassant
+		self.isDoublePawnPush = isDoublePawnPush
 	
 	def __repr__(self) -> str:
 		return f" {self.start_square} to {self.target_square} with {self.piece}"
@@ -298,10 +325,13 @@ class Board:
 		
 		self.board = []
 
+		self.DoublePawnMoves = []
+
 		self.Reset()
 	
 	def Reset(self):
 		self.GenerateNewBoard()
+		self.DoublePawnMoves = []
 	
 	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPP1PPPP/RNBQKBNR'):
 		self.board = []
@@ -389,13 +419,21 @@ class Board:
 		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
 
 		if move in LegalMoves: # If the move is a legal move, actually play it on the board
-			self.PlayMove(self, move=move) # <--- This function handles all of the internals
+			self.PlayMove(move) # <--- This function handles all of the internals
 		
 		else:
 			return "No Legal Moves" # If the move is not legal, return saying it is not legal. You can't return None because the upper
 									# section also is returning None currently.
 	
 	def PlayMove(self, move: Move): # This function is the same as the Move function, just no checking if the move is legal.
+		self.DoublePawnMoves.clear()
+		
+		if move.isDoublePawnPush:
+			self.DoublePawnMoves.append(move.piece)
+		
+		if type(move.piece) == Pawn:
+			move.piece.moved = True
+
 		move.piece.SetBoardPos(move.target_square) # Move the pieces board coords
 
 		self.SetPieceAtBoardPos(move.target_square, move.piece) # Move the piece to the target square
@@ -439,15 +477,21 @@ def GenerateLegalMoves(board: Board, piece: Piece) -> list[Move]: # This turns t
 	for move in pseudoLegalMoves:
 		newBoard = copy.deepcopy(board)
 
-		newBoard.PlayMove(move) # This play move function does not need to check the legal moves 
+		# We need to remake the move to reference the proper (relative) piece in the newBoard
+
+		newMove = Move(move.start_square, move.target_square, newBoard.board[BoardPosToIndex(move.start_square)],
+				 isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush)
+
+		newBoard.PlayMove(newMove) # This play move function does not need to check the legal moves 
 								# because it will be checked outside of the function. 
 								# Just update everything like usual assuming everything is correct.
 
 		if KingChecked(newBoard, move.piece.color):
-			del newBoard
+			del newBoard, newMove
 			continue
 		else:
 			fullLegalMoves.append(move)
+			del newBoard, newMove
 	
 	return fullLegalMoves
 
