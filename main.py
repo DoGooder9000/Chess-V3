@@ -137,12 +137,63 @@ class Knight(Piece):
 		super().__init__(FEN, color, board_pos)
 
 	def GetLegalMoves(self, board: Board) -> list[Move]:
-		LegalMoves = []
+		LegalMoves: list[Move] = []
 
-		return LegalMoves
+		X, Y = self.board_pos
+		index = BoardPosToIndex(self.board_pos)
+		
+		# Upper Moves
+
+		if (X >= 2) and (Y >= 1):														#	#
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-10), self))	#	###
+		
+		if (X >= 1) and (Y >= 2):														#	##
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-17), self))	#	 #
+																						#	 #
+
+		if (X <= board_width-2) and (Y >= 2):											#	##
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-15), self))	#	#
+																						#	#
+		
+		if (X <= board_width-3) and (Y >= 1):											#	  #
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-6), self))		#	###
+
+		# Lower Moves
+		
+		if (X <= board_width-3) and (Y <= board_height-2):								#	###
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+10), self))	#	  #
+		
+		if (X <= board_width-2) and (Y <= board_height-3):								#	#
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+17), self))	#	#
+															#	##
+		
+		if (X >= 1) and (Y <= board_height-2):											#	 #
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+15), self))	#	 #
+																						#	##
+		
+		if (X >= 2) and (Y <= board_height-3):											#	###
+			LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+6), self))		#	#
+
+
+		NotOwnPieces = []
+
+		for move in LegalMoves:
+
+			if move.GetTargetSquarePiece(board) == '_': NotOwnPieces.append(move)
+			
+			else:
+				if move.GetTargetSquarePiece(board).color == self.color: continue
+				else: NotOwnPieces.append(move)
+
+		return NotOwnPieces
 	
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
-		return []
+		attacked = []
+
+		for move in self.GetLegalMoves(board):
+			attacked.append(move.target_square)
+		
+		return attacked
 
 class Queen(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -197,6 +248,15 @@ class Move:
 		self.target_square = target_square
 		self.piece = pieceMoving
 		self.isEnPassant = isEnPassant
+	
+	def __repr__(self) -> str:
+		return f" {self.start_square} to {self.target_square} with {self.piece}"
+	
+	def __eq__(self, other: object) -> bool:
+		return (self.target_square == other.target_square) and (self.start_square == other.start_square) and (self.piece == other.piece) and (self.isEnPassant == other.isEnPassant)
+	
+	def GetTargetSquarePiece(self, board: Board):
+		return board.board[BoardPosToIndex(self.target_square)]
 
 
 class Board:
@@ -299,6 +359,8 @@ class Board:
 		# Check for if the King is in check after the move, if he is, remove it
 
 		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
+
+		print(move in LegalMoves)
 
 		if move in LegalMoves:
 			move.piece.SetBoardPos(move.target_square)
