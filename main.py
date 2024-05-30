@@ -19,6 +19,7 @@ class Piece:
 		self.board_pos = board_pos
 
 		self.IndexDirections = IndexDirections = {'Top Left':-9, 'Up':-8, 'Top Right':-7, 'Right':+1, 'Bottom Right':+9, 'Down':+8, 'Bottom Left':+7, 'Left':-1}
+		self.Directions = []
 		
 		self.SetRect()
 		
@@ -72,7 +73,7 @@ class Piece:
 				
 		window.blit(img, self.rect.topleft)
 	
-	def GetLegalMoves(self) -> list[Move]:
+	def GetLegalMoves(self, board: Board) -> list[Move]:
 		pass
 
 
@@ -82,35 +83,13 @@ class Rook(Piece):
 			FEN = 'R'
 		else:
 			FEN = 'r'
-
-		self.RookDirections = ['Up', 'Down', 'Left', 'Right']
 		
 		super().__init__(FEN, color, board_pos)
+
+		self.Directions = ['Up', 'Down', 'Left', 'Right']
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
-		LegalMoves = []
-
-		for direction in self.RookDirections: # Loop through all directions
-			index = BoardPosToIndex(self.board_pos)
-
-			for i in range(GetNumberOfSquaresToEdge(self.board_pos, direction)+1): # Step in each direction
-				if i == 0: # Skip ourselves
-					continue
-					
-				index += self.IndexDirections[direction]
-
-				if board.board[index] == '_': # If the square is blank, it is a legal move
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index), self))
-					continue
-
-				elif board.board[index].color == self.color: # If we run into our own piece, switch to another direction
-					break
-				
-				else: # This is just if the piece is an enemy piece, we can capture, but cant go further
-					LegalMoves.append(self.board_pos, IndexToBoardPos(index), self)
-					break
-
-		return LegalMoves
+		return GetSlidingPieceLegalMoves(board, self)
 	
 class Bishop(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -120,6 +99,11 @@ class Bishop(Piece):
 			FEN = 'b'
 		
 		super().__init__(FEN, color, board_pos)
+
+		self.Directions = ['Top Left', 'Top Right', 'Bottom Left', 'Bottom Right']
+
+	def GetLegalMoves(self, board: Board) -> list[Move]:
+		return GetSlidingPieceLegalMoves(board, self)
 
 class Knight(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -138,6 +122,11 @@ class Queen(Piece):
 			FEN = 'q'
 		
 		super().__init__(FEN, color, board_pos)
+
+		self.Directions = ['Up', 'Down', 'Left', 'Right', 'Top Left', 'Top Right', 'Bottom Left', 'Bottom Right']
+	
+	def GetLegalMoves(self, board: Board) -> list[Move]:
+		return GetSlidingPieceLegalMoves(board, self)
 
 class King(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -269,6 +258,32 @@ class Board:
 		ChangePlayColor(self)
 
 
+
+
+def GetSlidingPieceLegalMoves(board: Board, piece: Piece):
+	LegalMoves = []
+
+	for direction in piece.Directions: # Loop through all directions
+		index = BoardPosToIndex(piece.board_pos)
+
+		for i in range(GetNumberOfSquaresToEdge(piece.board_pos, direction)+1): # Step in each direction
+			if i == 0: # Skip ourselves
+				continue
+				
+			index += piece.IndexDirections[direction]
+
+			if board.board[index] == '_': # If the square is blank, it is a legal move
+				LegalMoves.append(Move(piece.board_pos, IndexToBoardPos(index), piece))
+				continue
+
+			elif board.board[index].color == piece.color: # If we run into our own piece, switch to another direction
+				break
+			
+			else: # This is just if the piece is an enemy piece, we can capture, but cant go further
+				LegalMoves.append(piece.board_pos, IndexToBoardPos(index), piece)
+				break
+
+	return LegalMoves
 
 
 
