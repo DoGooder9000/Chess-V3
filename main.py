@@ -22,6 +22,9 @@ class Piece:
 		self.Directions = []
 		
 		self.SetRect()
+
+	def __repr__(self) -> str:
+		return f" {self.color} {self.FEN} "
 		
 	def SetRect(self):
 		self.rect = pygame.Rect((self.board_pos[0]*square_width, self.board_pos[1]*square_height), square_size)
@@ -76,6 +79,9 @@ class Piece:
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		pass
 
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		pass
+
 
 class Rook(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -90,6 +96,14 @@ class Rook(Piece):
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		return GetSlidingPieceLegalMoves(board, self)
+
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		attacked = []
+
+		for move in self.GetLegalMoves(board):
+			attacked.append(move.target_square)
+		
+		return attacked
 	
 class Bishop(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -105,6 +119,14 @@ class Bishop(Piece):
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		return GetSlidingPieceLegalMoves(board, self)
 
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		attacked = []
+
+		for move in self.GetLegalMoves(board):
+			attacked.append(move.target_square)
+		
+		return attacked
+
 class Knight(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
 		if color == 'White':
@@ -113,6 +135,14 @@ class Knight(Piece):
 			FEN = 'n'
 		
 		super().__init__(FEN, color, board_pos)
+
+	def GetLegalMoves(self, board: Board) -> list[Move]:
+		LegalMoves = []
+
+		return LegalMoves
+	
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		return []
 
 class Queen(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -128,6 +158,14 @@ class Queen(Piece):
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		return GetSlidingPieceLegalMoves(board, self)
 
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		attacked = []
+
+		for move in self.GetLegalMoves(board):
+			attacked.append(move.target_square)
+
+		return attacked
+
 class King(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
 		if color == 'White':
@@ -136,6 +174,9 @@ class King(Piece):
 			FEN = 'k'
 		
 		super().__init__(FEN, color, board_pos)
+	
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		return []
 
 class Pawn(Piece):
 	def __init__(self, color: str, board_pos: tuple[int]):
@@ -145,6 +186,9 @@ class Pawn(Piece):
 			FEN = 'p'
 		
 		super().__init__(FEN, color, board_pos)
+	
+	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
+		return []
 
 
 class Move:
@@ -171,7 +215,7 @@ class Board:
 	def Reset(self):
 		self.GenerateNewBoard()
 	
-	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'):
+	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPP1PPPP/RNBQKBNR'):
 		self.board = []
 
 		for _ in range(self.width * self.height):
@@ -251,16 +295,69 @@ class Board:
 		self.board[BoardPosToIndex(board_pos)] = value
 	
 	def Move(self, move: Move):
-		self.SetPieceAtBoardPos(move.start_square, '_')
-		self.SetPieceAtBoardPos(move.target_square, move.piece)
-		move.piece.SetBoardPos(move.target_square)
+		# Check if the move is in the Piece's legal moves
+		# Check for if the King is in check after the move, if he is, remove it
 
-		ChangePlayColor(self)
+		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
+
+		if move in LegalMoves:
+			move.piece.SetBoardPos(move.target_square)
+
+			ChangePlayColor(self)
+		
+		else:
+			return None
+	
+	def PlayMove(self, move: Move):
+		pass
+
+	def GetPieces(self, color: str) -> list[Piece]:
+		pieces = []
+
+		for piece in self.board:
+			if piece != '_' and piece.color == color:
+				pieces.append(piece)
+
+		return pieces
+	
+	def GetPieceFromFEN(self, FEN: str) -> Piece:
+		for piece in self.board:
+			if piece != '_' and piece.FEN == FEN:
+				return piece
+			
+		return None
+	
+	def GetPiece(self, piecetype: Piece, color: str) -> Piece | None:
+		for piece in self.board:
+			if piece != '_' and type(piece) == piecetype and piece.color == color:
+				return piece
+		
+		return None
 
 
+def GenerateLegalMoves(board: Board, piece: Piece) -> list[Move]:
+	pseudoLegalMoves = piece.GetLegalMoves(board)
+
+	fullLegalMoves = []
+
+	if pseudoLegalMoves == None or pseudoLegalMoves == []:
+		return []
+
+	for move in pseudoLegalMoves:
+		newBoard = copy.deepcopy(board)
+
+		newBoard.PlayMove(move)
+
+		if KingChecked(newBoard, move.piece.color):
+			del newBoard
+			continue
+		else:
+			fullLegalMoves.append(move)
+	
+	return fullLegalMoves
 
 
-def GetSlidingPieceLegalMoves(board: Board, piece: Piece):
+def GetSlidingPieceLegalMoves(board: Board, piece: Piece) -> list[Move]:
 	LegalMoves = []
 
 	for direction in piece.Directions: # Loop through all directions
@@ -280,7 +377,7 @@ def GetSlidingPieceLegalMoves(board: Board, piece: Piece):
 				break
 			
 			else: # This is just if the piece is an enemy piece, we can capture, but cant go further
-				LegalMoves.append(piece.board_pos, IndexToBoardPos(index), piece)
+				LegalMoves.append(Move(piece.board_pos, IndexToBoardPos(index), piece))
 				break
 
 	return LegalMoves
@@ -322,6 +419,23 @@ def GetNumberOfSquaresToEdge(start_square: tuple[int], dir: str): # 8 Different 
 	
 	return
 
+def KingChecked(board: Board, color: str): # Returns whether or not the king of the color given is in check
+
+	all_attacked_squares = []
+
+	for piece in board.GetPieces(OppositeColor(color)): # Loop through all enemy pieces
+		for square in piece.GetAttackedSquares(board):
+			all_attacked_squares.append(square) # Add the squares that are attacked to the list
+	
+	if board.GetPiece(King, 'White').board_pos in all_attacked_squares:
+		return True
+	else:
+		return False
+
+
+def OppositeColor(color: str):
+	if color == 'White': return 'Black'
+	else: return 'White'
 
 def GetPieceBoardPos(board_pos: tuple[int], board: Board):
 	return board.board[BoardPosToIndex(board_pos)]
@@ -362,6 +476,14 @@ def DrawPieces(board: Board, DrawClickedPiece = True):
 	if clickedPiece != None and DrawClickedPiece:
 		clickedPiece.Draw()
 
+def DrawLegalMoves(piece: Piece, board: Board):
+	LegalMoves = GenerateLegalMoves(board, piece)
+
+	for move in LegalMoves:
+		pygame.draw.rect(window, LegalMoveColor, pygame.Rect((move.target_square[0]*square_width, move.target_square[1]*square_height), square_size))
+
+
+
 def ChangePlayColor(board: Board):
 	if board.color == 'White': board.color = 'Black'
 	else: board.color = 'White'
@@ -386,6 +508,7 @@ square_size = (square_width, square_height)
 									 
 LightSquareColor = (209, 162, 96)
 DarkSquareColor = (115, 90, 56)
+LegalMoveColor = (255, 153, 0)
 
 
 WhiteKing = pygame.transform.scale(pygame.image.load('Images/whiteking.png'), square_size)
@@ -441,7 +564,10 @@ while True:
 				start_square = GetBoardPosFromPiece(clickedPiece, currentBoard)
 
 				if target_square != start_square:
-					currentBoard.Move(Move(start_square, target_square, clickedPiece))
+					result = currentBoard.Move(Move(start_square, target_square, clickedPiece))
+
+					if result == None:
+						clickedPiece.SetBoardPos(start_square)
 				
 				else:
 					clickedPiece.SetBoardPos(start_square)
@@ -455,6 +581,10 @@ while True:
 	window.fill('black')
 	
 	currentBoard.Draw()
+
+	if clickedPiece:
+		DrawLegalMoves(clickedPiece, currentBoard)
+
 	
 	DrawPieces(currentBoard)
 	
