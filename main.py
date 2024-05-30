@@ -270,6 +270,30 @@ class Pawn(Piece):
 			# Left Capture
 			if board.board[index-9] != '_' and board.board[index-9].color != self.color and X >= 1:
 				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
+		
+		else:
+			# Double Pawn Push
+
+			#	If not moved yet		And 2 spaces below is clear			And 1 space below is clear
+			if self.moved == False and board.board[index+16] == '_' and board.board[index+8] == '_':
+				# Make sure to set the double pawn push move argument
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+16), self, False, True))
+			
+			# Single Pawn Push
+			if board.board[index+8] == '_':
+				# This is only a single pawn push so no double pawn push argument
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self))
+			
+			# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
+			# For Black, Bottom Right is +9 and Bottom Left is +7
+
+			# Right Capture
+			if board.board[index+9] != '_' and board.board[index+9].color != self.color and X <= board_width-2:
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self))
+			
+			# Left Capture
+			if board.board[index+7] != '_' and board.board[index+7].color != self.color and X >= 1:
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self))
 
 		return LegalMoves
 	
@@ -333,7 +357,7 @@ class Board:
 		self.GenerateNewBoard()
 		self.DoublePawnMoves = []
 	
-	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPP1PPPP/RNBQKBNR'):
+	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'):
 		self.board = []
 
 		for _ in range(self.width * self.height):
@@ -565,8 +589,9 @@ def KingChecked(board: Board, color: str): # Returns whether or not the king of 
 	for piece in board.GetPieces(OppositeColor(color)): # Loop through all enemy pieces
 		for square in piece.GetAttackedSquares(board):
 			all_attacked_squares.append(square) # Add the squares that are attacked to the list
-	
-	if board.GetPiece(King, 'White').board_pos in all_attacked_squares:
+
+
+	if board.GetPiece(King, color).board_pos in all_attacked_squares:
 		return True
 	else:
 		return False
