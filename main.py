@@ -360,15 +360,15 @@ class Board:
 
 		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
 
-		print(move in LegalMoves)
-
 		if move in LegalMoves:
 			move.piece.SetBoardPos(move.target_square)
 
 			ChangePlayColor(self)
+
+			return 
 		
 		else:
-			return None
+			return "No Legal Moves"
 	
 	def PlayMove(self, move: Move):
 		pass
@@ -523,7 +523,7 @@ def GetBoardPosFromPiece(piece: Piece, board: Board):
 
 		index += 1
 
-def DrawPieces(board: Board, DrawClickedPiece = True):
+def DrawPieces(board: Board, DrawClickedPiece = True) -> None:
 	global clickedPiece
 
 
@@ -628,7 +628,7 @@ while True:
 				if target_square != start_square:
 					result = currentBoard.Move(Move(start_square, target_square, clickedPiece))
 
-					if result == None:
+					if result == "No Legal Moves":
 						clickedPiece.SetBoardPos(start_square)
 				
 				else:
