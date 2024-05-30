@@ -237,9 +237,37 @@ class Pawn(Piece):
 			FEN = 'p'
 		
 		super().__init__(FEN, color, board_pos)
+
+		# maybe add rank detection. If they are black and are lower than the 7th rank, they moved. Visa Versa with white
+
+		self.moved = False
+	
+	def GetLegalMoves(self, board: Board) -> list[Move]:
+		LegalMoves = []
+
+		return LegalMoves
 	
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
-		return []
+		attacking = []
+
+		X, Y = self.board_pos
+		index = BoardPosToIndex(self.board_pos)
+
+		if self.color == 'White': # White attacks the -7 (Top Right) and the -9 (Top Left)
+			if X <= board_width-2: # If we are far enough away from the right side of the board
+				attacking.append(IndexToBoardPos(index-7))
+			
+			if X >= 1: # If we are far enough away from the left side of the board
+				attacking.append(IndexToBoardPos(index-9))
+
+		else: # Black attacks the +7 (Bottom Left) and the +9 (Bottom Right)
+			if X <= board_width-2:
+				attacking.append(IndexToBoardPos(index+9))
+			
+			if X >= 1:
+				attacking.append(IndexToBoardPos(index-7))
+
+		return attacking
 
 
 class Move:
@@ -354,7 +382,7 @@ class Board:
 	def SetPieceAtBoardPos(self, board_pos: tuple[int], value: any):
 		self.board[BoardPosToIndex(board_pos)] = value
 	
-	def Move(self, move: Move):
+	def BoardMove(self, move: Move):
 		# Check if the move is in the Piece's legal moves
 		# Check for if the King is in check after the move, if he is, remove it
 
@@ -369,6 +397,7 @@ class Board:
 	
 	def PlayMove(self, move: Move): # This function is the same as the Move function, just no checking if the move is legal.
 		move.piece.SetBoardPos(move.target_square) # Move the pieces board coords
+
 		self.SetPieceAtBoardPos(move.target_square, move.piece) # Move the piece to the target square
 		self.SetPieceAtBoardPos(move.start_square, '_') # Make the start square blank
 
@@ -630,7 +659,7 @@ while True:
 				start_square = GetBoardPosFromPiece(clickedPiece, currentBoard)
 
 				if target_square != start_square:
-					result = currentBoard.Move(Move(start_square, target_square, clickedPiece))
+					result = currentBoard.BoardMove(Move(start_square, target_square, clickedPiece))
 
 					if result == "No Legal Moves":
 						clickedPiece.SetBoardPos(start_square)
