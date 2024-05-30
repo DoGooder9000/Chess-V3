@@ -14,6 +14,10 @@ class Piece:
 		
 	def SetRect(self):
 		self.rect = pygame.Rect((self.board_pos[0]*square_width, self.board_pos[1]*square_height), square_size)
+
+	def SetBoardPos(self, board_pos: tuple[int]):
+		self.board_pos = board_pos
+		self.SetRect()
 	
 	def Draw(self):
 		img = None
@@ -115,9 +119,11 @@ class Pawn(Piece):
 
 
 class Move:
-	def __init__(self, start_square: tuple[int], target_square: tuple[int]):
+	def __init__(self, start_square: tuple[int], target_square: tuple[int], pieceMoving: Piece, isEnPassant = False) -> None:
 		self.start_square = start_square
 		self.target_square = target_square
+		self.piece = pieceMoving
+		self.isEnPassant = isEnPassant
 
 
 class Board:
@@ -211,6 +217,20 @@ class Board:
 					pygame.draw.rect(window, LightSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
 				else:
 					pygame.draw.rect(window, DarkSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
+	
+	def SetPieceAtBoardPos(self, board_pos: tuple[int], value: any):
+		self.board[BoardPosToIndex(board_pos)] = value
+	
+	def Move(self, move: Move):
+		self.SetPieceAtBoardPos(move.start_square, '_')
+		self.SetPieceAtBoardPos(move.target_square, move.piece)
+		move.piece.SetBoardPos(move.target_square)
+
+		ChangePlayColor(self)
+
+
+
+
 
 def GetPieceBoardPos(board_pos: tuple[int], board: Board):
 	return board.board[BoardPosToIndex(board_pos)]
@@ -227,10 +247,33 @@ def MouseToBoardPos(mouse_pos: tuple[float]):
 
 	return (rank, file)
 
-def DrawPieces(board: Board):
+def GetBoardPosFromPiece(piece: Piece, board: Board):
+	index = 0
+
+	for otherPiece in board.board:
+		if otherPiece == piece:
+			return IndexToBoardPos(index)
+
+		index += 1
+
+def DrawPieces(board: Board, DrawClickedPiece = True):
+	global clickedPiece
+
+
 	for piece in board.board:
 		if piece != '_':
-			piece.Draw()
+			if DrawClickedPiece:
+				if piece != clickedPiece:
+					piece.Draw()
+			else:
+				piece.Draw()
+	
+	if clickedPiece != None and DrawClickedPiece:
+		clickedPiece.Draw()
+
+def ChangePlayColor(board: Board):
+	if board.color == 'White': board.color = 'Black'
+	else: board.color = 'White'
 
 def Update():
 	pygame.display.update()
@@ -276,6 +319,8 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 currentBoard = Board(board_width, board_height, 'White')
 
+clickedPiece = None
+
 mouseDown = False
 
 while True:
@@ -287,9 +332,9 @@ while True:
 		elif event.type == pygame.MOUSEBUTTONDOWN:
 			mouseDown = True
 
-			square_loc = MouseToBoardPos(pygame.mouse.get_pos())
+			start_square = MouseToBoardPos(pygame.mouse.get_pos())
 
-			clickedPiece = GetPieceBoardPos(square_loc, currentBoard)
+			clickedPiece = GetPieceBoardPos(start_square, currentBoard)
 
 			if clickedPiece == '_':
 				clickedPiece = None
@@ -299,9 +344,18 @@ while True:
 
 		elif event.type == pygame.MOUSEBUTTONUP:
 			mouseDown = False
+
+			if clickedPiece != None:
+				target_square = MouseToBoardPos(pygame.mouse.get_pos())
+				start_square = GetBoardPosFromPiece(clickedPiece, currentBoard)
+
+				currentBoard.Move(Move(start_square, target_square, clickedPiece))
+			
+			clickedPiece = None
 			
 		elif event.type == pygame.MOUSEMOTION:
-			pass
+			if mouseDown and clickedPiece != None:
+				clickedPiece.rect.center = pygame.mouse.get_pos()
 	
 	window.fill('black')
 	
