@@ -361,7 +361,9 @@ class Board:
 		LegalMoves = GenerateLegalMoves(self, move.piece) # This function will test the pieces moves for if they make the King get checked, and will remove them if they do
 
 		if move in LegalMoves:
-			move.piece.SetBoardPos(move.target_square)
+			move.piece.SetBoardPos(move.target_square) # Move the pieces board coords
+			self.SetPieceAtBoardPos(move.target_square, move.piece) # Move the piece to the target square
+			self.SetPieceAtBoardPos(move.start_square, '_') # Make the start square blank
 
 			ChangePlayColor(self)
 
@@ -553,7 +555,7 @@ def ChangePlayColor(board: Board):
 def Update():
 	pygame.display.update()
 
-window_size = (800, 800)
+window_size = (400, 400)
 window_width, window_height = window_size
 window_name = "Chess V3"
 
