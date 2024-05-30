@@ -121,11 +121,13 @@ class Move:
 
 
 class Board:
-	def __init__(self, width: int, height: int):
+	def __init__(self, width: int, height: int, start_color: str = 'White'):
 		self.width = width
 		self.height = height
 		
 		self.size = (width, height)
+
+		self.color = start_color
 		
 		self.board = []
 
@@ -202,7 +204,7 @@ class Board:
 							i += 1
 		
 	
-	def Draw(self):
+	def Draw(self) -> None:
 		for x in range(board_width):
 			for y in range(board_height):
 				if (x+y)%2 == 0:
@@ -210,15 +212,23 @@ class Board:
 				else:
 					pygame.draw.rect(window, DarkSquareColor, pygame.Rect((x*square_width, y*square_height), square_size))
 
+def GetPieceBoardPos(board_pos: tuple[int], board: Board):
+	return board.board[BoardPosToIndex(board_pos)]
 
-def BoardPosToIndex(pos: tuple):
+def BoardPosToIndex(pos: tuple) -> int:
 	return pos[0] + pos[1] * board_width
 
 def IndexToBoardPos(index: int) -> tuple[int]:
 	return (index%board_width, index//board_width)
 
-def DrawPieces():
-	for piece in Board.board:
+def MouseToBoardPos(mouse_pos: tuple[float]):
+	rank = int(mouse_pos[0]//square_width)
+	file = int(mouse_pos[1]//square_height)
+
+	return (rank, file)
+
+def DrawPieces(board: Board):
+	for piece in board.board:
 		if piece != '_':
 			piece.Draw()
 
@@ -264,19 +274,40 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 
 
-Board = Board(board_width, board_height)
+currentBoard = Board(board_width, board_height, 'White')
+
+mouseDown = False
 
 while True:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
 			quit()
+
+		elif event.type == pygame.MOUSEBUTTONDOWN:
+			mouseDown = True
+
+			square_loc = MouseToBoardPos(pygame.mouse.get_pos())
+
+			clickedPiece = GetPieceBoardPos(square_loc, currentBoard)
+
+			if clickedPiece == '_':
+				clickedPiece = None
+			
+			elif clickedPiece.color != currentBoard.color:
+				clickedPiece = None
+
+		elif event.type == pygame.MOUSEBUTTONUP:
+			mouseDown = False
+			
+		elif event.type == pygame.MOUSEMOTION:
+			pass
 	
 	window.fill('black')
 	
-	Board.Draw()
+	currentBoard.Draw()
 	
-	DrawPieces()
+	DrawPieces(currentBoard)
 	
 	Update()
 
