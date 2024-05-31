@@ -1,9 +1,6 @@
 import pygame
 import copy
 import random
-import sys
-
-sys.setrecursionlimit(20)
 
 
 pygame.init()
@@ -89,7 +86,7 @@ class Piece:
 
 
 class Rook(Piece):
-	def __init__(self, color: str, board_pos: tuple[int], canCastle: bool = False):
+	def __init__(self, color: str, board_pos: tuple[int], castleSide: str):
 		if color == 'White':
 			FEN = 'R'
 		else:
@@ -98,6 +95,8 @@ class Rook(Piece):
 		super().__init__(FEN, color, board_pos)
 
 		self.Directions = ['Up', 'Down', 'Left', 'Right']
+
+		self.castleSide = castleSide
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		return GetSlidingPieceLegalMoves(board, self)
@@ -532,11 +531,27 @@ class Board:
 		for symbol in parts[0]:
 			match symbol:
 				case 'R':
-					self.board[i] = Rook('White', IndexToBoardPos(i))
+					if ('K' in self.CastleRights) and IndexToBoardPos(i) == (7, 7):
+						self.board[i] = Rook('White', IndexToBoardPos(i), 'King')
+					
+					elif ('Q' in self.CastleRights) and IndexToBoardPos(i) == (0, 7):
+						self.board[i] = Rook('White', IndexToBoardPos(i), 'Queen')
+					
+					else:
+						self.board[i] = Rook('White', IndexToBoardPos(i), None)
+
 					i += 1
 					
 				case 'r':
-					self.board[i] = Rook('Black', IndexToBoardPos(i))
+					if ('k' in self.CastleRights) and IndexToBoardPos(i) == (7, 0):
+						self.board[i] = Rook('Black', IndexToBoardPos(i), 'King')
+					
+					elif ('q' in self.CastleRights) and IndexToBoardPos(i) == (0, 0):
+						self.board[i] = Rook('Black', IndexToBoardPos(i), 'Queen')
+					
+					else:
+						self.board[i] = Rook('Black', IndexToBoardPos(i), None)
+
 					i += 1
 					
 				case 'N':
@@ -677,6 +692,27 @@ class Board:
 
 				except:
 					pass
+		
+		if type(move.piece) == Rook:
+			try:
+				if move.piece.color == 'White':
+
+					if move.piece.castleSide == 'King':
+						self.CastleRights.remove('K')
+
+					elif move.piece.castleSide == 'Queen':
+						self.CastleRights.remove('Q')
+				
+				if move.piece.color == 'Black':
+
+					if move.piece.castleSide == 'King':
+						self.CastleRights.remove('k')
+
+					elif move.piece.castleSide == 'Queen':
+						self.CastleRights.remove('q')
+			
+			except:
+				pass
 		
 		if type(move.piece) == Pawn:
 			move.piece.moved = True
