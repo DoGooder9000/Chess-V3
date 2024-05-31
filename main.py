@@ -294,118 +294,115 @@ class Pawn(Piece):
 		X, Y = self.board_pos
 		index = BoardPosToIndex(self.board_pos)
 
-		if Y <= 0 or Y >= 7:
-			pass
-		else:
 
-			if self.color == 'White': # For white pawns
-				# Double Pawn Push
+		if self.color == 'White': # For white pawns
+			# Double Pawn Push
 
-				#	If not moved yet		And 2 spaces above is clear			And 1 space above is clear
-				if self.moved == False and board.board[index-16] == '_' and board.board[index-8] == '_':
-					# Make sure to set the double pawn push move argument
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-16), self, isEnPassant=False, isDoublePawnPush = True))
-				
-				# Single Pawn Push
-				if board.board[index-8] == '_':
-					if Y == 1:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-8))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-8))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-8))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-8))))
-
-					else:
-						# This is only a single pawn push so no double pawn push argument
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self))
-				
-				# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
-
-				# Right Capture
-				if X <= board_width-2 and board.board[index-7] != '_' and board.board[index-7].color != self.color:
-					if Y == 1:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-7))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-7))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-7))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-7))))
-
-					else:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self))
-				
-				# Left Capture
-				if X >= 1 and board.board[index-9] != '_' and board.board[index-9].color != self.color:
-					if Y == 1:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-9))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-9))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-9))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-9))))
-					
-					else:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
-
-
-				# En Passant
-				if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'Black' and board.board[index-7] == '_': # Right En Passant. Make sure the square above the pawn to be captured is free
-					if board.board[index+1] in board.DoublePawnMoves:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top right
-				
-				if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'Black' and board.board[index-9] == '_': # Left En Passant. Make sure the square above the pawn to be captured is free
-					if board.board[index-1] in board.DoublePawnMoves:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
+			#	If not moved yet		And 2 spaces above is clear			And 1 space above is clear
+			if self.moved == False and board.board[index-16] == '_' and board.board[index-8] == '_':
+				# Make sure to set the double pawn push move argument
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-16), self, isEnPassant=False, isDoublePawnPush = True))
 			
-			else:
-				# Double Pawn Push
+			# Single Pawn Push
+			if board.board[index-8] == '_':
+				if Y == 1:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-8))))
 
-				#	If not moved yet		And 2 spaces below is clear			And 1 space below is clear
-				if self.moved == False and board.board[index+16] == '_' and board.board[index+8] == '_':
-					# Make sure to set the double pawn push move argument
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+16), self, isEnPassant=False, isDoublePawnPush = True))
-				
-				# Single Pawn Push
-				if board.board[index+8] == '_':
-					if Y == board_height-2:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+8))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+8))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+8))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+8))))
+				else:
+					# This is only a single pawn push so no double pawn push argument
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self))
+			
+			# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
 
-					else:
-						# This is only a single pawn push so no double pawn push argument
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self))
-				
-				# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
-				# For Black, Bottom Right is +9 and Bottom Left is +7
+			# Right Capture
+			if X <= board_width-2 and board.board[index-7] != '_' and board.board[index-7].color != self.color:
+				if Y == 1:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-7))))
 
-				# Right Capture
-				if X <= board_width-2 and board.board[index+9] != '_' and board.board[index+9].color != self.color:
-					if Y == board_height-2:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+9))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+9))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+9))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+9))))
-					
-					else:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self))
+				else:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self))
+			
+			# Left Capture
+			if X >= 1 and board.board[index-9] != '_' and board.board[index-9].color != self.color:
+				if Y == 1:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-9))))
 				
-				# Left Capture
-				if X >= 1 and board.board[index+7] != '_' and board.board[index+7].color != self.color:
-					if Y == board_height-2:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+7))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+7))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+7))))
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+7))))
-					
-					else:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self))
-				
-				# En Passant
+				else:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
 
-				if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'White' and board.board[index+9] == '_': # Right En Passant. Make sure the square below the pawn to be captured is free
-					if board.board[index+1] in board.DoublePawnMoves:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the Bottom Right
+
+			# En Passant
+			if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'Black' and board.board[index-7] == '_': # Right En Passant. Make sure the square above the pawn to be captured is free
+				if board.board[index+1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top right
+			
+			if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'Black' and board.board[index-9] == '_': # Left En Passant. Make sure the square above the pawn to be captured is free
+				if board.board[index-1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
+		
+		else:
+			# Double Pawn Push
+
+			#	If not moved yet		And 2 spaces below is clear			And 1 space below is clear
+			if self.moved == False and board.board[index+16] == '_' and board.board[index+8] == '_':
+				# Make sure to set the double pawn push move argument
+				LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+16), self, isEnPassant=False, isDoublePawnPush = True))
+			
+			# Single Pawn Push
+			if board.board[index+8] == '_':
+				if Y == board_height-2:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+8))))
+
+				else:
+					# This is only a single pawn push so no double pawn push argument
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self))
+			
+			# Right and Left Captures. Remember for white, Top Left is -9, and Top Right is -7
+			# For Black, Bottom Right is +9 and Bottom Left is +7
+
+			# Right Capture
+			if X <= board_width-2 and board.board[index+9] != '_' and board.board[index+9].color != self.color:
+				if Y == board_height-2:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+9))))
 				
-				if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'White' and board.board[index+7] == '_': # Left En Passant. Make sure the square below the pawn to be captured is free
-					if board.board[index-1] in board.DoublePawnMoves:
-						LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
+				else:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self))
+			
+			# Left Capture
+			if X >= 1 and board.board[index+7] != '_' and board.board[index+7].color != self.color:
+				if Y == board_height-2:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+7))))
+				
+				else:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self))
+			
+			# En Passant
+
+			if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'White' and board.board[index+9] == '_': # Right En Passant. Make sure the square below the pawn to be captured is free
+				if board.board[index+1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the Bottom Right
+			
+			if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'White' and board.board[index+7] == '_': # Left En Passant. Make sure the square below the pawn to be captured is free
+				if board.board[index-1] in board.DoublePawnMoves:
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
 
 		return LegalMoves
 	
@@ -445,7 +442,7 @@ class Move:
 		return f" {self.start_square} to {self.target_square} with {self.piece}, {self.isEnPassant} {self.isDoublePawnPush}"
 	
 	def __eq__(self, other: object) -> bool:
-		return (self.target_square == other.target_square) and (self.start_square == other.start_square) and (self.piece == other.piece) and (self.isEnPassant == other.isEnPassant) and (self.isDoublePawnPush == other.isEnPassant) and (type(self.PromotionPiece) == type(other.PromotionPiece))
+		return (self.target_square == other.target_square) and (self.start_square == other.start_square) and (self.piece == other.piece) and (self.isEnPassant == other.isEnPassant) and (self.isDoublePawnPush == other.isDoublePawnPush) and (type(self.PromotionPiece) == type(other.PromotionPiece))
 	
 	def GetTargetSquarePiece(self, board: Board):
 		return board.board[BoardPosToIndex(self.target_square)]
@@ -588,7 +585,7 @@ class Board:
 		
 		if move.PromotionPiece != None:
 
-			self.SetPieceAtBoardPos(move.target_square, move.PromotionPiece(move.piece.color, move.target_square))
+			self.SetPieceAtBoardPos(move.target_square, move.PromotionPiece)
 			self.SetPieceAtBoardPos(move.start_square, '_') # Make the start square blank
 			del move.piece
 
@@ -951,7 +948,7 @@ while True:
 								m = move
 								break
 					
-					if m == None:
+					if m is None:
 						clickedPiece.SetBoardPos(start_square)
 					
 					else:
