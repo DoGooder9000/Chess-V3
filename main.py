@@ -94,8 +94,6 @@ class Rook(Piece):
 		super().__init__(FEN, color, board_pos)
 
 		self.Directions = ['Up', 'Down', 'Left', 'Right']
-
-		self.canCastle = canCastle
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		return GetSlidingPieceLegalMoves(board, self)
@@ -228,8 +226,6 @@ class King(Piece):
 			FEN = 'k'
 		
 		super().__init__(FEN, color, board_pos)
-
-		self.canCastle = canCastle
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		LegalMoves = []
@@ -434,13 +430,14 @@ class Pawn(Piece):
 
 
 class Move:
-	def __init__(self, start_square: tuple[int], target_square: tuple[int], pieceMoving: Piece, isEnPassant = False, isDoublePawnPush = False, PromotionPiece: Piece = None) -> None:
+	def __init__(self, start_square: tuple[int], target_square: tuple[int], pieceMoving: Piece, isEnPassant = False, isDoublePawnPush = False, PromotionPiece: Piece = None, isCastle: bool = False) -> None:
 		self.start_square = start_square
 		self.target_square = target_square
 		self.piece = pieceMoving
 		self.isEnPassant = isEnPassant
 		self.isDoublePawnPush = isDoublePawnPush
 		self.PromotionPiece = PromotionPiece
+		self.isCastle = isCastle
 	
 	def __repr__(self) -> str:
 		return f" {self.start_square} to {self.target_square} with {self.piece}, {self.isEnPassant} {self.isDoublePawnPush}"
@@ -465,6 +462,8 @@ class Board:
 
 		self.DoublePawnMoves = []
 
+		self.CastleRights = []
+
 		self.Reset()
 	
 	def Reset(self):
@@ -475,12 +474,20 @@ class Board:
 	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
 		parts = FEN.split(' ')
 
+		self.board = []
+		self.CastleRights = []
+
 		if parts[1] == 'w':
 			self.color = 'White'
 		else:
 			self.color = 'Black'
 
-		self.board = []
+		for letter in parts[2]:
+			if letter == '-':
+				continue
+			else:
+				self.CastleRights.append(letter)
+
 
 		for _ in range(self.width * self.height):
 			self.board.append(0)
@@ -590,6 +597,9 @@ class Board:
 					self.SetPieceAtBoardPos((move.start_square[0]+1, move.start_square[1]), '_')
 				else:
 					self.SetPieceAtBoardPos((move.start_square[0]-1, move.start_square[1]), '_')
+		
+		if move.isCastle:
+			pass
 		
 		if type(move.piece) == Pawn:
 			move.piece.moved = True
