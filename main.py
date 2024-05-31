@@ -265,6 +265,15 @@ class King(Piece):
 			else:
 				continue
 
+		if self.color == 'White':
+			if 'K' in board.CastleRights: # White, Kingside castle
+				if board.board[index+1] == '_' and board.board[index+2] == '_':  # If the squares are clear
+					attacked = GetAttackedSquares(board, 'Black')
+
+					if not (IndexToBoardPos(index+1) in attacked) and not (IndexToBoardPos(index+2) in attacked) and not (KingChecked(board, self.color)): # And if the squares are not attacked and the king is not in check
+						LegalMoves.append(Move(self.board_pos, (6, 7), self, isCastle=True))
+
+
 		return LegalMoves
 
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
@@ -419,7 +428,7 @@ class Pawn(Piece):
 			if X >= 1: # If we are far enough away from the left side of the board
 				attacking.append(IndexToBoardPos(index-9))
 
-		else: # Black attacks the +7 (Bottom Left) and the +9 (Bottom Right)
+		else: # Black attacks the +7 (Bottom Left) and the +9 (Bottom Right)F
 			if X <= board_width-2:
 				attacking.append(IndexToBoardPos(index+9))
 			
@@ -599,7 +608,28 @@ class Board:
 					self.SetPieceAtBoardPos((move.start_square[0]-1, move.start_square[1]), '_')
 		
 		if move.isCastle:
-			pass
+			if type(move.piece) == King and move.piece.color == 'White':
+				if move.target_square == (6, 7):
+					self.SetPieceAtBoardPos((5, 7), self.board[BoardPosToIndex((7, 7))])
+					self.SetPieceAtBoardPos((7, 7), '_')
+
+					self.board[BoardPosToIndex((5, 7))].SetBoardPos((5, 7))
+
+		if type(move.piece) == King:
+			if move.piece.color == 'White':
+				try:
+					self.CastleRights.remove('K')
+					self.CastleRights.remove('Q')
+				except:
+					pass
+			
+			else:
+				try:
+					self.CastleRights.remove('k')
+					self.CastleRights.remove('q')
+
+				except:
+					pass
 		
 		if type(move.piece) == Pawn:
 			move.piece.moved = True
