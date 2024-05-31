@@ -479,7 +479,7 @@ class Move:
 	def __eq__(self, other: object) -> bool:
 		return (self.target_square == other.target_square) and (self.start_square == other.start_square) and (self.piece == other.piece) and (self.isEnPassant == other.isEnPassant) and (self.isDoublePawnPush == other.isDoublePawnPush) and (type(self.PromotionPiece) == type(other.PromotionPiece))
 	
-	def GetTargetSquarePiece(self, board: Board):
+	def GetTargetSquarePiece(self, board: Board) -> Piece:
 		return board.board[BoardPosToIndex(self.target_square)]
 
 
@@ -709,6 +709,29 @@ class Board:
 						self.CastleRights.remove('k')
 
 					elif move.piece.castleSide == 'Queen':
+						self.CastleRights.remove('q')
+			
+			except:
+				pass
+				
+		target_square_piece = move.GetTargetSquarePiece(self)
+
+		if type(target_square_piece) == Rook:
+			try:
+				if target_square_piece.color == 'White':
+
+					if target_square_piece.castleSide == 'King':
+						self.CastleRights.remove('K')
+
+					elif target_square_piece.castleSide == 'Queen':
+						self.CastleRights.remove('Q')
+				
+				if target_square_piece.color == 'Black':
+
+					if target_square_piece.castleSide == 'King':
+						self.CastleRights.remove('k')
+
+					elif target_square_piece.castleSide == 'Queen':
 						self.CastleRights.remove('q')
 			
 			except:
@@ -992,6 +1015,7 @@ clickedPiece: Piece = None
 mouseDown = False
 skipErrors = True
 showAttacked = False
+showAttackedColor = 'White'
 
 PieceToPromoteTo = Queen
 
@@ -1121,13 +1145,16 @@ while True:
 			
 			elif event.key == pygame.K_p:
 				PieceToPromoteTo = Rook
+			
+			elif event.key == pygame.K_v:
+				showAttackedColor = OppositeColor(showAttackedColor)
 	
 	window.fill('black')
 	
 	currentBoard.Draw()
 
 	if showAttacked:
-		DrawAttackedSquares(currentBoard, currentBoard.color)
+		DrawAttackedSquares(currentBoard, showAttackedColor)
 
 	if clickedPiece:
 		DrawLegalMoves(clickedPiece, currentBoard)
