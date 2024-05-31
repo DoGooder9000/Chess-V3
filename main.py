@@ -85,7 +85,7 @@ class Piece:
 
 
 class Rook(Piece):
-	def __init__(self, color: str, board_pos: tuple[int]):
+	def __init__(self, color: str, board_pos: tuple[int], canCastle: bool = False):
 		if color == 'White':
 			FEN = 'R'
 		else:
@@ -94,6 +94,8 @@ class Rook(Piece):
 		super().__init__(FEN, color, board_pos)
 
 		self.Directions = ['Up', 'Down', 'Left', 'Right']
+
+		self.canCastle = canCastle
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		return GetSlidingPieceLegalMoves(board, self)
@@ -219,13 +221,15 @@ class Queen(Piece):
 		return attacked
 
 class King(Piece):
-	def __init__(self, color: str, board_pos: tuple[int]):
+	def __init__(self, color: str, board_pos: tuple[int], canCastle: bool = False):
 		if color == 'White':
 			FEN = 'K'
 		else:
 			FEN = 'k'
 		
 		super().__init__(FEN, color, board_pos)
+
+		self.canCastle = canCastle
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		LegalMoves = []
@@ -468,7 +472,14 @@ class Board:
 		self.DoublePawnMoves = []
 		self.color = 'White'
 	
-	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'):
+	def GenerateNewBoard(self, FEN: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'):
+		parts = FEN.split(' ')
+
+		if parts[1] == 'w':
+			self.color = 'White'
+		else:
+			self.color = 'Black'
+
 		self.board = []
 
 		for _ in range(self.width * self.height):
@@ -476,7 +487,7 @@ class Board:
 
 		i = 0 # Index in the board we are at
 		
-		for symbol in FEN:
+		for symbol in parts[0]:
 			match symbol:
 				case 'R':
 					self.board[i] = Rook('White', IndexToBoardPos(i))
@@ -810,7 +821,7 @@ def ChangePlayColor(board: Board):
 def Update():
 	pygame.display.update()
 
-window_size = (400, 400)
+window_size = (600, 600)
 window_width, window_height = window_size
 window_name = "Chess V3"
 
