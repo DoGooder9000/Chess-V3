@@ -813,45 +813,27 @@ while True:
 	if currentBoard.color == 'Black':
 		if skipErrors:
 			try:
-				#currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
-				currentBoard.BoardMove(GenerateAllLegalMoves(currentBoard, 'Black')[0])
+				currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
+				#currentBoard.BoardMove(GenerateAllLegalMoves(currentBoard, 'Black')[0])
 			
 			except:
 				if KingChecked(currentBoard, 'Black'):
 					print("White Wins by Checkmate")
+
+					while True:
+						input()
+						quit()
 				else:
 					print("Draw by Stalemate. Black has no moves")
+					while True:
+						input()
+						quit()
 		else:
 			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
-
-	if currentBoard.color == 'White':
-		if skipErrors:
-			try:
-				currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
-			
-			except:
-				if KingChecked(currentBoard, 'White'):
-					print("Black Wins by Checkmate")
-				else:
-					print("Draw by Stalemate. White has no moves")
-		else:
-			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
 	
 	
 	if len(currentBoard.GetPieces('White')) == 1 and len(currentBoard.GetPieces('Black')) == 1:
 		print('Draw by no material')
-
-	'''	if currentBoard.color == 'White':
-		try:
-			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'White')))
-		except:
-			if KingChecked(currentBoard, 'White'):
-				#print("\n\nBlack won by Checkmate !!!!!\n\n")
-				pygame.quit()
-				quit()
-			else:
-				pass
-			#print('Draw White No moves')'''
 
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
