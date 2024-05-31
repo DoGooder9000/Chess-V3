@@ -1,6 +1,10 @@
 import pygame
 import copy
 import random
+import sys
+
+sys.setrecursionlimit(20)
+
 
 pygame.init()
 
@@ -227,7 +231,7 @@ class King(Piece):
 		
 		super().__init__(FEN, color, board_pos)
 	
-	def GetLegalMoves(self, board: Board) -> list[Move]:
+	def GetLegalMoves(self, board: Board, gettingAttacking: bool = False) -> list[Move]:
 		LegalMoves = []
 
 		directions = []
@@ -265,21 +269,43 @@ class King(Piece):
 			else:
 				continue
 
-		if self.color == 'White':
-			if 'K' in board.CastleRights: # White, Kingside castle
-				if board.board[index+1] == '_' and board.board[index+2] == '_':  # If the squares are clear
-					attacked = GetAttackedSquares(board, 'Black')
+		if not (gettingAttacking):
+			if self.color == 'White':
+				if 'K' in board.CastleRights: # White, Kingside castle
+					if board.board[index+1] == '_' and board.board[index+2] == '_':  # If the squares are clear
+						attacked = GetAttackedSquares(board, 'Black')
 
-					if not (IndexToBoardPos(index+1) in attacked) and not (IndexToBoardPos(index+2) in attacked) and not (KingChecked(board, self.color)): # And if the squares are not attacked and the king is not in check
-						LegalMoves.append(Move(self.board_pos, (6, 7), self, isCastle=True))
+						if not (IndexToBoardPos(index+1) in attacked) and not (IndexToBoardPos(index+2) in attacked) and not (KingChecked(board, self.color)): # And if the squares are not attacked and the king is not in check
+							LegalMoves.append(Move(self.board_pos, (6, 7), self, isCastle=True))
+				
+				if 'Q' in board.CastleRights:
+					if board.board[index-1] == '_' and board.board[index-2] == '_':
+						attacked = GetAttackedSquares(board, 'Black')
 
+						if not (IndexToBoardPos(index-1) in attacked) and not (IndexToBoardPos(index-2) in attacked) and not (KingChecked(board, self.color)): # We are the king so maybe check if the board_pos is in attacked instead of use the funciton
+							LegalMoves.append(Move(self.board_pos, (2, 7), self, isCastle=True))
+			
+			else:
+				if 'k' in board.CastleRights: # White, Kingside castle
+					if board.board[index+1] == '_' and board.board[index+2] == '_':  # If the squares are clear
+						attacked = GetAttackedSquares(board, 'White')
+
+						if not (IndexToBoardPos(index+1) in attacked) and not (IndexToBoardPos(index+2) in attacked) and not (KingChecked(board, self.color)): # And if the squares are not attacked and the king is not in check
+							LegalMoves.append(Move(self.board_pos, (6, 0), self, isCastle=True))
+				
+				if 'q' in board.CastleRights:
+					if board.board[index-1] == '_' and board.board[index-2] == '_':
+						attacked = GetAttackedSquares(board, 'White')
+
+						if not (IndexToBoardPos(index-1) in attacked) and not (IndexToBoardPos(index-2) in attacked) and not (KingChecked(board, self.color)): # We are the king so maybe check if the board_pos is in attacked instead of use the funciton
+							LegalMoves.append(Move(self.board_pos, (2, 0), self, isCastle=True))
 
 		return LegalMoves
 
 	def GetAttackedSquares(self, board: Board) -> list[tuple[int]]:
 		attacked = []
 
-		for move in self.GetLegalMoves(board):
+		for move in self.GetLegalMoves(board, True):
 			attacked.append(move.target_square)
 
 		return attacked
@@ -608,12 +634,33 @@ class Board:
 					self.SetPieceAtBoardPos((move.start_square[0]-1, move.start_square[1]), '_')
 		
 		if move.isCastle:
-			if type(move.piece) == King and move.piece.color == 'White':
-				if move.target_square == (6, 7):
-					self.SetPieceAtBoardPos((5, 7), self.board[BoardPosToIndex((7, 7))])
-					self.SetPieceAtBoardPos((7, 7), '_')
+			if type(move.piece) == King:
+				if move.piece.color == 'White':
+					if move.target_square == (6, 7):
+						self.SetPieceAtBoardPos((5, 7), self.board[BoardPosToIndex((7, 7))]) # Move the rook
+						self.SetPieceAtBoardPos((7, 7), '_') # Clear the square it moved from
 
-					self.board[BoardPosToIndex((5, 7))].SetBoardPos((5, 7))
+						self.board[BoardPosToIndex((5, 7))].SetBoardPos((5, 7)) # Move the piece in it's internals
+					
+					elif move.target_square == (2, 7):
+						self.SetPieceAtBoardPos((3, 7), self.board[BoardPosToIndex((0, 7))]) # Move the rook
+						self.SetPieceAtBoardPos((0, 7), '_') # Set the square it moved from to blank
+
+						self.board[BoardPosToIndex((3, 7))].SetBoardPos((3, 7)) # Move it inside itself
+
+				# Black Castling
+				else:
+					if move.target_square == (6, 0):
+						self.SetPieceAtBoardPos((5, 0), self.board[BoardPosToIndex((7, 0))]) # Move the rook
+						self.SetPieceAtBoardPos((7, 0), '_') # Clear the square it moved from
+
+						self.board[BoardPosToIndex((5, 0))].SetBoardPos((5, 0)) # Move the piece in it's internals
+					
+					elif move.target_square == (2, 0):
+						self.SetPieceAtBoardPos((3, 0), self.board[BoardPosToIndex((0, 0))]) # Move the rook
+						self.SetPieceAtBoardPos((0, 0), '_') # Set the square it moved from to blank
+
+						self.board[BoardPosToIndex((3, 0))].SetBoardPos((3, 0)) # Move it inside itself
 
 		if type(move.piece) == King:
 			if move.piece.color == 'White':
@@ -916,7 +963,7 @@ clock = pygame.time.Clock()
 
 while True:
 
-	if currentBoard.color == 'Black':
+	'''if currentBoard.color == 'Black':
 		if skipErrors:
 			try:
 				currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
@@ -935,7 +982,7 @@ while True:
 						input()
 						quit()
 		else:
-			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))
+			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))'''
 	
 	
 	if len(currentBoard.GetPieces('White')) == 1 and len(currentBoard.GetPieces('Black')) == 1:
@@ -956,7 +1003,7 @@ while True:
 			if clickedPiece == '_':
 				clickedPiece = None
 			
-			elif clickedPiece.color != 'White':
+			elif clickedPiece.color != currentBoard.color:
 				clickedPiece = None
 
 		elif event.type == pygame.MOUSEBUTTONUP:
