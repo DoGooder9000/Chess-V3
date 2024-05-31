@@ -684,7 +684,7 @@ def GetNumberOfSquaresToEdge(start_square: tuple[int], dir: str): # 8 Different 
 
 def KingChecked(board: Board, color: str): # Returns whether or not the king of the color given is in check
 
-	attacked = GetAttackedSquares(board, color)
+	attacked = GetAttackedSquares(board, OppositeColor(color))
 
 
 	if board.GetPiece(King, color).board_pos in attacked:
@@ -695,7 +695,7 @@ def KingChecked(board: Board, color: str): # Returns whether or not the king of 
 def GetAttackedSquares(board: Board, color: str) -> list[tuple[int]]:
 	all_attacked_squares = []
 
-	for piece in board.GetPieces(OppositeColor(color)): # Loop through all enemy pieces
+	for piece in board.GetPieces(color): # Loop through all enemy pieces
 		for square in piece.GetAttackedSquares(board):
 			all_attacked_squares.append(square) # Add the squares that are attacked to the list
 	
@@ -750,6 +750,10 @@ def DrawLegalMoves(piece: Piece, board: Board):
 	for move in LegalMoves:
 		pygame.draw.rect(window, LegalMoveColor, pygame.Rect((move.target_square[0]*square_width, move.target_square[1]*square_height), square_size))
 
+def DrawAttackedSquares(board: Board, color: str):
+	for square in GetAttackedSquares(board, color):
+		pygame.draw.rect(window, AttackSquareColor, pygame.Rect((square[0]*square_width, square[1]*square_height), square_size))
+
 
 
 def ChangePlayColor(board: Board):
@@ -777,6 +781,7 @@ square_size = (square_width, square_height)
 LightSquareColor = (209, 162, 96)
 DarkSquareColor = (115, 90, 56)
 LegalMoveColor = (255, 153, 0)
+AttackSquareColor = (255, 0, 0)
 
 
 WhiteKing = pygame.transform.scale(pygame.image.load('Images/whiteking.png'), square_size)
@@ -805,6 +810,7 @@ clickedPiece: Piece = None
 
 mouseDown = False
 skipErrors = True
+showAttacked = False
 
 clock = pygame.time.Clock()
 
@@ -885,16 +891,22 @@ while True:
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_r:
 				currentBoard.Reset()
+
 			elif event.key == pygame.K_a:
 				skipErrors = not skipErrors
+
+			elif event.key == pygame.K_c:
+				showAttacked = not showAttacked
 	
 	window.fill('black')
 	
 	currentBoard.Draw()
 
+	if showAttacked:
+		DrawAttackedSquares(currentBoard, currentBoard.color)
+
 	if clickedPiece:
 		DrawLegalMoves(clickedPiece, currentBoard)
-
 	
 	DrawPieces(currentBoard)
 	
