@@ -343,7 +343,9 @@ class Pawn(Piece):
 
 		# maybe add rank detection. If they are black and are lower than the 7th rank, they moved. Visa Versa with white
 
-		self.moved = False
+		if self.color == 'White' and self.board_pos[1] == 6: self.moved = False
+		elif self.color == 'Black' and self.board_pos[1] == 1: self.moved = False
+		else: self.moved = True
 	
 	def GetLegalMoves(self, board: Board) -> list[Move]:
 		LegalMoves = []
@@ -366,7 +368,7 @@ class Pawn(Piece):
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-8))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-8))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-8))))
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-8), None)))
 
 				else:
 					# This is only a single pawn push so no double pawn push argument
@@ -380,7 +382,7 @@ class Pawn(Piece):
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-7))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-7))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-7))))
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-7), None)))
 
 				else:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self))
@@ -391,18 +393,18 @@ class Pawn(Piece):
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index-9))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index-9))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index-9))))
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index-9), None)))
 				
 				else:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self))
 
 
 			# En Passant
-			if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'Black' and board.board[index-7] == '_': # Right En Passant. Make sure the square above the pawn to be captured is free
+			if X <= board_width-2 and board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'Black' and board.board[index-7] == '_': # Right En Passant. Make sure the square above the pawn to be captured is free
 				if board.board[index+1] in board.DoublePawnMoves:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top right
 			
-			if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'Black' and board.board[index-9] == '_': # Left En Passant. Make sure the square above the pawn to be captured is free
+			if X >= 1 and board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'Black' and board.board[index-9] == '_': # Left En Passant. Make sure the square above the pawn to be captured is free
 				if board.board[index-1] in board.DoublePawnMoves:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index-9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
 		
@@ -420,7 +422,7 @@ class Pawn(Piece):
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+8))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+8))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+8))))
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+8))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+8), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+8), None)))
 
 				else:
 					# This is only a single pawn push so no double pawn push argument
@@ -435,7 +437,7 @@ class Pawn(Piece):
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+9))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+9))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+9))))
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+9))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+9), None)))
 				
 				else:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self))
@@ -446,18 +448,18 @@ class Pawn(Piece):
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Queen(self.color, IndexToBoardPos(index+7))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Knight(self.color, IndexToBoardPos(index+7))))
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Bishop(self.color, IndexToBoardPos(index+7))))
-					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+7))))
+					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, PromotionPiece=Rook(self.color, IndexToBoardPos(index+7), None)))
 				
 				else:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self))
 			
 			# En Passant
 
-			if board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'White' and board.board[index+9] == '_': # Right En Passant. Make sure the square below the pawn to be captured is free
+			if X <= board_width-2 and board.board[index+1] != '_' and type(board.board[index+1]) == Pawn and board.board[index+1].color == 'White' and board.board[index+9] == '_': # Right En Passant. Make sure the square below the pawn to be captured is free
 				if board.board[index+1] in board.DoublePawnMoves:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+9), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the Bottom Right
 			
-			if board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'White' and board.board[index+7] == '_': # Left En Passant. Make sure the square below the pawn to be captured is free
+			if X >= 1 and board.board[index-1] != '_' and type(board.board[index-1]) == Pawn and board.board[index-1].color == 'White' and board.board[index+7] == '_': # Left En Passant. Make sure the square below the pawn to be captured is free
 				if board.board[index-1] in board.DoublePawnMoves:
 					LegalMoves.append(Move(self.board_pos, IndexToBoardPos(index+7), self, isEnPassant=True, isDoublePawnPush=False)) # Move to the top left
 
@@ -909,6 +911,48 @@ def GetNumberOfSquaresToEdge(start_square: tuple[int], dir: str): # 8 Different 
 	
 	return
 
+def CountLegalMoves(board: Board, halfmoves: int):
+	return CountLegalMovesSub(board, halfmoves)
+
+def CountLegalMovesSub(board: Board, depth: int):
+	if depth <= 0:
+		return 1
+
+	move_count = 0
+
+	for move in GenerateAllLegalMoves(board, board.color): # Don't flip the color because the board.PlayMove funciton does that
+		newBoard = copy.deepcopy(board)
+		newPiece = copy.deepcopy(move.piece)
+
+		newBoard.SetPieceAtBoardPos(newPiece.board_pos, newPiece)
+
+		# We need to remake the move to reference the proper (relative) piece in the newBoard
+
+		newMove = Move(move.start_square, move.target_square, newPiece,
+				 isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush, PromotionPiece=move.PromotionPiece, isCastle=move.isCastle)
+
+		newBoard.PlayMove(newMove) # This play move function does not need to check the legal moves 
+								# because it will be checked outside of the function. 
+								# Just update everything like usual assuming everything is correct.
+		
+		count = CountLegalMovesSub(newBoard, depth-1)
+
+		#if depth == 3: print(str(HumanReadable(move.start_square)) + ' to ' + str(HumanReadable(move.target_square)) + ": " + str(count)
+
+		move_count += count
+
+		del newBoard, newPiece, newMove
+	
+	return move_count
+
+def HumanReadable(pos: tuple[int]) -> str:
+	rank_str = 'abcdefgh'
+	file_str = '87654321' # Backword because the board is flipped vertically. Top is 0, bottom is 7
+
+	return rank_str[pos[0]] + file_str[pos[1]]
+
+	
+
 def KingChecked(board: Board, color: str): # Returns whether or not the king of the color given is in check
 
 	attacked = GetAttackedSquares(board, OppositeColor(color))
@@ -1032,6 +1076,7 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 
 currentBoard = Board(board_width, board_height, 'White')
+currentBoard.GenerateNewBoard('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8')
 
 clickedPiece: Piece = None
 
@@ -1041,6 +1086,9 @@ showAttacked = False
 showAttackedColor = 'White'
 
 PieceToPromoteTo = Queen
+
+
+#print(CountLegalMoves(currentBoard, 3))
 
 clock = pygame.time.Clock()
 
