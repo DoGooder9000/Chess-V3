@@ -1,6 +1,8 @@
 import pygame
 import copy
 import random
+import time
+from threading import Thread
 
 
 pygame.init()
@@ -17,18 +19,34 @@ class Board:
 class Bot:
 	pass
 
+class SearchThread(Thread):
+	def __init__(self, group=None, target=None, name=None, args=(), kwargs=(), Verbose=None):
+		Thread.__init__(self, group, target, name, args, kwargs)
+
+		self._return = None
+	
+	def run(self):
+		if self._target is not None:
+			self._return = self._target(*self._args)
+	
+	def join(self):
+		Thread.join(self)
+		return self._return
+
 
 class Bot:
 	def __init__(self, color: str, board: Board) -> None:
 		self.color = color
 		self.board = board
 
-		self.depth = 4
+		self.depth = 3
 
 		self.PieceValues = {Pawn:100, Knight:300, Bishop:300, Rook:500, Queen:900, King:0}
 
 		self.PositiveInfinity = +1000000
 		self.NegativeInfinity = -1000000
+
+		self.currentOrderingBoard = None
 
 	def SetBoard(self, newBoard: Board) -> None:
 		self.board = newBoard
@@ -37,19 +55,88 @@ class Bot:
 
 		if self.board.color == self.color:
 			eval, move = self.Search(self.board, self.NegativeInfinity, self.PositiveInfinity, self.depth)
-			print(eval)
+			
+			if len(GenerateAllLegalMoves(self.board, self.color)) == 0:
+				if KingChecked(self.board, self.color):
+					return f"Checkmate by {OppositeColor(self.color)}"
+				else:
+					return "Draw by Stalemate"
+
+			elif eval == self.NegativeInfinity:
+				return random.choice(GenerateAllLegalMoves(self.board, self.color))
+			
 
 			return move
 		
 		else:
 			return None
 
-	
-	def Search(self, board: Board, alpha: int, beta: int, depth: int) -> int:
-		if depth == 0:
+	def ThreadSearch(self, board: Board, alpha: int, beta: int, depth: int) -> int:
+		if depth <= 0:
 			return self.Evaluate(board, board.color), None
 		
+		self.currentOrderingBoard = board
+
 		moves = GenerateAllLegalMoves(board, board.color)
+		moves = self.OrderMoves(moves)
+
+		if len(moves) == 0:
+			if KingChecked(board, board.color):
+				return self.NegativeInfinity, None
+			else:
+				return 0, None
+			
+		bestMove = None
+
+		threads = []
+
+		for move in moves:
+			newBoard = copy.deepcopy(board)
+			newPiece = copy.deepcopy(move.piece)
+
+			newBoard.SetPieceAtBoardPos(newPiece.board_pos, newPiece)
+
+			# We need to remake the move to reference the proper (relative) piece in the newBoard
+
+			newMove = Move(move.start_square, move.target_square, newPiece,
+					isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush, PromotionPiece=move.PromotionPiece, isCastle=move.isCastle)
+
+			newBoard.PlayMove(newMove)
+
+			if depth == self.depth:
+				t = SearchThread(target=self.Search, args=(newBoard, -beta, -alpha, depth-1))
+				t.start()
+				threads.append((t, move))
+			
+			del newBoard, newPiece, newMove
+
+		for thread, move in threads:
+			res = thread.join()
+			if res == None:
+				pass
+
+			else:
+				eval, _ = res
+
+				if eval >= beta:
+					return beta, None   # fail hard beta-cutoff
+				
+				if eval > alpha:
+					alpha = eval; # alpha acts like max in MiniMax
+					bestMove = move
+
+		
+		return alpha, bestMove
+
+
+	def Search(self, board: Board, alpha: int, beta: int, depth: int) -> int:
+		if depth <= 0:
+			return self.Evaluate(board, board.color), None
+		
+		self.currentOrderingBoard = board
+
+		moves = GenerateAllLegalMoves(board, board.color)
+		moves = self.OrderMoves(moves)
 
 		if len(moves) == 0:
 			if KingChecked(board, board.color):
@@ -109,6 +196,20 @@ class Bot:
 
 		return material
 
+	def OrderMoves(self, moves: list[Move]) -> list[Move]:
+		moves.sort(key=self.ScoreMove, reverse=True)
+		
+		return moves
+	
+
+	def ScoreMove(self, move: Move,) -> float:
+		pieceType = type(move.piece)
+		targetPieceType = type(move.GetTargetSquarePiece(self.currentOrderingBoard))
+
+		if targetPieceType == str:
+			return 0
+
+		return self.PieceValues[targetPieceType] - self.PieceValues[pieceType]
 
 
 
@@ -1152,7 +1253,7 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 
 currentBoard = Board(board_width, board_height, 'White')
-#currentBoard.GenerateNewBoard('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8')
+#currentBoard.GenerateNewBoard('k7/8/8/8/8/6Q1/7R/7K w - - 0 1')
 
 clickedPiece: Piece = None
 
@@ -1192,12 +1293,26 @@ while True:
 						quit()
 		else:
 			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))'''
-	
-	blackBot.SetBoard(currentBoard)
-	move = blackBot.MakeMove()
+	if currentBoard.color == 'Black':
+		blackBot.SetBoard(currentBoard)
+
+		start = time.time()
+
+		move = blackBot.MakeMove()
+
+		end = time.time()
+
+		print(end-start)
+	else:
+		move = None
 
 	if not (move is None):
-		currentBoard.BoardMove(move)
+		if type(move) == str:
+			print(move)
+			quit()
+
+		else:
+			currentBoard.BoardMove(move)
 	
 	
 	if len(currentBoard.GetPieces('White')) == 1 and len(currentBoard.GetPieces('Black')) == 1:
