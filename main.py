@@ -148,14 +148,18 @@ class Bot:
 
 		for move in moves:
 			newBoard = copy.deepcopy(board)
-			newPiece = copy.deepcopy(move.piece)
+			newMove = copy.deepcopy(move)
+
+			newBoard.SetPieceAtBoardPos(newMove.piece.board_pos, newMove.piece)
+
+			'''newPiece = copy.deepcopy(move.piece)
 
 			newBoard.SetPieceAtBoardPos(newPiece.board_pos, newPiece)
 
 			# We need to remake the move to reference the proper (relative) piece in the newBoard
 
 			newMove = Move(move.start_square, move.target_square, newPiece,
-					isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush, PromotionPiece=move.PromotionPiece, isCastle=move.isCastle)
+					isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush, PromotionPiece=move.PromotionPiece, isCastle=move.isCastle)'''
 
 			newBoard.PlayMove(newMove)
 
@@ -169,7 +173,7 @@ class Bot:
 				alpha = eval; # alpha acts like max in MiniMax
 				bestMove = move
 
-			del newBoard, newPiece, newMove
+			del newBoard, newMove
 		
 		return alpha, bestMove
 
@@ -177,8 +181,9 @@ class Bot:
 	
 
 	def Evaluate(self, board: Board, color: str) -> int:
-		whiteEval = self.CountMaterial(board, 'White')
-		blackEval = self.CountMaterial(board, 'Black')
+		whiteEval, blackEval = self.CountMaterial(board)
+
+		#if len(GenerateAllLegalMoves(board, OppositeColor(color))) == 0 and KingChecked(board, OppositeColor(color)): return self.PositiveInfinity # Bot Checkmated opponent
 
 		totalEval = whiteEval - blackEval
 
@@ -188,13 +193,20 @@ class Bot:
 		else:
 			return -1 * totalEval
 
-	def CountMaterial(self, board: Board, color: str) -> int: # Count up the total value of material for a side
-		material = 0
+	def CountMaterial(self, board: Board) -> int: # Count up the total value of material for a side
+		materialWhite = 0
+		materialBlack = 0
 
-		for piece in board.GetPieces(color):
-			material += self.PieceValues[type(piece)]
+		for piece in board.board:
+			if piece == '_':
+				continue
+			else:
+				if piece.color == 'White':
+					materialWhite += self.PieceValues[type(piece)]
+				else:
+					materialBlack += self.PieceValues[type(piece)]
 
-		return material
+		return materialWhite, materialBlack
 
 	def OrderMoves(self, moves: list[Move]) -> list[Move]:
 		moves.sort(key=self.ScoreMove, reverse=True)
