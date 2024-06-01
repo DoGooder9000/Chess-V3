@@ -54,7 +54,7 @@ class Bot:
 	def MakeMove(self) -> Move:
 
 		if self.board.color == self.color:
-			eval, move = self.Search(self.board, self.NegativeInfinity, self.PositiveInfinity, self.depth)
+			eval, move = self.Search(self.board, self.NegativeInfinity, self.PositiveInfinity+1, self.depth)
 			
 			if len(GenerateAllLegalMoves(self.board, self.color)) == 0:
 				if KingChecked(self.board, self.color):
@@ -165,6 +165,7 @@ class Bot:
 
 			eval, _ = self.Search(newBoard, -beta, -alpha, depth - 1)
 			eval = -eval
+
 
 			if eval >= beta:
 				return beta, None   # fail hard beta-cutoff
@@ -1126,8 +1127,6 @@ def CountLegalMovesSub(board: Board, depth: int):
 		
 		count = CountLegalMovesSub(newBoard, depth-1)
 
-		#if depth == 3: print(str(HumanReadable(move.start_square)) + ' to ' + str(HumanReadable(move.target_square)) + ": " + str(count)
-
 		move_count += count
 
 		del newBoard, newPiece, newMove
@@ -1265,7 +1264,7 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 
 currentBoard = Board(board_width, board_height, 'White')
-#currentBoard.GenerateNewBoard('k7/8/8/8/8/6Q1/7R/7K w - - 0 1')
+#currentBoard.GenerateNewBoard('1rbk3r/ppp2Qpp/3p4/3K4/2P1P3/3P3B/5q2/R7 b - - 0 1')
 
 clickedPiece: Piece = None
 
@@ -1305,12 +1304,15 @@ while True:
 						quit()
 		else:
 			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))'''
+	
 	if currentBoard.color == 'Black':
 		blackBot.SetBoard(currentBoard)
 
 		start = time.time()
 
 		move = blackBot.MakeMove()
+
+		print(move)
 
 		end = time.time()
 
@@ -1326,7 +1328,14 @@ while True:
 		else:
 			currentBoard.BoardMove(move)
 	
-	
+	if len(GenerateAllLegalMoves(currentBoard, currentBoard.color)) == 0:
+		if KingChecked(currentBoard, currentBoard.color):
+			print(currentBoard.color + ' Got Checkmated by ' + OppositeColor(currentBoard.color))
+		else:
+			print('Draw By Stalemate')
+		
+		quit()
+
 	if len(currentBoard.GetPieces('White')) == 1 and len(currentBoard.GetPieces('Black')) == 1:
 		print('Draw by no material')
 
