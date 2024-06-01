@@ -23,10 +23,11 @@ class Bot:
 		self.color = color
 		self.board = board
 
-		self.depth = 3
+		self.depth = 4
 
 		self.PieceValues = {Pawn:100, Knight:300, Bishop:300, Rook:500, Queen:900, King:0}
 
+		self.PositiveInfinity = +1000000
 		self.NegativeInfinity = -1000000
 
 	def SetBoard(self, newBoard: Board) -> None:
@@ -35,7 +36,7 @@ class Bot:
 	def MakeMove(self) -> Move:
 
 		if self.board.color == self.color:
-			eval, move = self.Search(self.board, self.depth)
+			eval, move = self.Search(self.board, self.NegativeInfinity, self.PositiveInfinity, self.depth)
 			print(eval)
 
 			return move
@@ -44,7 +45,7 @@ class Bot:
 			return None
 
 	
-	def Search(self, board: Board, depth: int) -> int:
+	def Search(self, board: Board, alpha: int, beta: int, depth: int) -> int:
 		if depth == 0:
 			return self.Evaluate(board, board.color), None
 		
@@ -55,8 +56,7 @@ class Bot:
 				return self.NegativeInfinity, None
 			else:
 				return 0, None
-		
-		bestEval = self.NegativeInfinity
+			
 		bestMove = None
 
 		for move in moves:
@@ -72,17 +72,19 @@ class Bot:
 
 			newBoard.PlayMove(newMove)
 
-			eval, _ = self.Search(newBoard, depth - 1)
-
+			eval, _ = self.Search(newBoard, -beta, -alpha, depth - 1)
 			eval = -eval
 
-			if eval > bestEval:
-				bestEval = eval
+			if eval >= beta:
+				return beta, None   # fail hard beta-cutoff
+			
+			if eval > alpha:
+				alpha = eval; # alpha acts like max in MiniMax
 				bestMove = move
 
 			del newBoard, newPiece, newMove
 		
-		return bestEval, bestMove
+		return alpha, bestMove
 
 
 	
