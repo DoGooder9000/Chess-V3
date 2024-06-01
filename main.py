@@ -23,15 +23,89 @@ class Bot:
 		self.color = color
 		self.board = board
 
+		self.depth = 3
+
+		self.PieceValues = {Pawn:100, Knight:300, Bishop:300, Rook:500, Queen:900, King:0}
+
+		self.NegativeInfinity = -1000000
+
 	def SetBoard(self, newBoard: Board) -> None:
 		self.board = newBoard
+
+	def MakeMove(self) -> Move:
+
+		if self.board.color == self.color:
+			eval, move = self.Search(self.board, self.depth)
+			print(eval)
+
+			return move
+		
+		else:
+			return None
+
 	
-	def Search(self, depth: int):
-		pass
+	def Search(self, board: Board, depth: int) -> int:
+		if depth == 0:
+			return self.Evaluate(board, board.color), None
+		
+		moves = GenerateAllLegalMoves(board, board.color)
+
+		if len(moves) == 0:
+			if KingChecked(board, board.color):
+				return self.NegativeInfinity, None
+			else:
+				return 0, None
+		
+		bestEval = self.NegativeInfinity
+		bestMove = None
+
+		for move in moves:
+			newBoard = copy.deepcopy(board)
+			newPiece = copy.deepcopy(move.piece)
+
+			newBoard.SetPieceAtBoardPos(newPiece.board_pos, newPiece)
+
+			# We need to remake the move to reference the proper (relative) piece in the newBoard
+
+			newMove = Move(move.start_square, move.target_square, newPiece,
+					isEnPassant=move.isEnPassant, isDoublePawnPush=move.isDoublePawnPush, PromotionPiece=move.PromotionPiece, isCastle=move.isCastle)
+
+			newBoard.PlayMove(newMove)
+
+			eval, _ = self.Search(newBoard, depth - 1)
+
+			eval = -eval
+
+			if eval > bestEval:
+				bestEval = eval
+				bestMove = move
+
+			del newBoard, newPiece, newMove
+		
+		return bestEval, bestMove
+
+
 	
 
-	def Evaluate(self):
-		pass
+	def Evaluate(self, board: Board, color: str) -> int:
+		whiteEval = self.CountMaterial(board, 'White')
+		blackEval = self.CountMaterial(board, 'Black')
+
+		totalEval = whiteEval - blackEval
+
+		if color == 'White':
+			return totalEval
+		
+		else:
+			return -1 * totalEval
+
+	def CountMaterial(self, board: Board, color: str) -> int: # Count up the total value of material for a side
+		material = 0
+
+		for piece in board.GetPieces(color):
+			material += self.PieceValues[type(piece)]
+
+		return material
 
 
 
@@ -1076,7 +1150,7 @@ BlackPawn = pygame.transform.scale(pygame.image.load('Images/blackpawn.png'), sq
 
 
 currentBoard = Board(board_width, board_height, 'White')
-currentBoard.GenerateNewBoard('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8')
+#currentBoard.GenerateNewBoard('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8')
 
 clickedPiece: Piece = None
 
@@ -1088,7 +1162,9 @@ showAttackedColor = 'White'
 PieceToPromoteTo = Queen
 
 
-#print(CountLegalMoves(currentBoard, 3))
+#print(CountLegalMoves(currentBoard, 2))
+
+blackBot = Bot('Black', currentBoard)
 
 clock = pygame.time.Clock()
 
@@ -1114,6 +1190,12 @@ while True:
 						quit()
 		else:
 			currentBoard.BoardMove(random.choice(GenerateAllLegalMoves(currentBoard, 'Black')))'''
+	
+	blackBot.SetBoard(currentBoard)
+	move = blackBot.MakeMove()
+
+	if not (move is None):
+		currentBoard.BoardMove(move)
 	
 	
 	if len(currentBoard.GetPieces('White')) == 1 and len(currentBoard.GetPieces('Black')) == 1:
