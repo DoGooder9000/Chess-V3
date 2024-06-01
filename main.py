@@ -14,6 +14,29 @@ class Piece:
 class Board:
 	pass
 
+class Bot:
+	pass
+
+
+class Bot:
+	def __init__(self, color: str, board: Board) -> None:
+		self.color = color
+		self.board = board
+
+	def SetBoard(self, newBoard: Board) -> None:
+		self.board = newBoard
+	
+	def Search(self, depth: int):
+		pass
+	
+
+	def Evaluate(self):
+		pass
+
+
+
+
+
 class Piece:
 	def __init__(self, FEN: str, color: str, board_pos: tuple[int]):
 		self.FEN = FEN
